@@ -1,0 +1,39 @@
+/*
+ * A root `1.` is a real Markdown list marker, so Obsidian renders a marker and
+ * shifts the line, while `1.1.` and deeper are plain paragraphs. That makes the
+ * levels jump by different amounts. The editor extension tags only the lines
+ * this plugin recognises, and these rules remove the built-in offset from them.
+ */
+.markdown-source-view.mod-cm6 .cm-line.nested-outline-numbering-line {
+	tab-size: 2;
+}
+
+.markdown-source-view.mod-cm6
+	.cm-line.nested-outline-numbering-line
+	.cm-formatting-list-ol {
+	padding-inline-start: 0 !important;
+}
+
+.markdown-source-view.mod-cm6
+	.cm-line.nested-outline-numbering-line
+	.cm-indent,
+.markdown-source-view.mod-cm6
+	.cm-line.nested-outline-numbering-line
+	.cm-indent-spacing:last-child {
+	min-width: 0 !important;
+	padding-inline-start: 0 !important;
+}
+
+.markdown-source-view.mod-cm6
+	.cm-line.nested-outline-numbering-line.HyperMD-codeblock {
+	padding-inline-start: 0 !important;
+	font-family: var(--font-text) !important;
+	font-size: var(--font-text-size) !important;
+	color: var(--text-normal);
+	direction: inherit;
+}
+
+.cm-s-obsidian div.cm-line.nested-outline-numbering-line.HyperMD-codeblock-bg {
+	background-color: transparent;
+	border-width: 0;
+}
