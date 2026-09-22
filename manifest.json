@@ -1,7 +1,7 @@
 {
 	"id": "nested-outline-numbering",
 	"name": "Nested Outline Numbering",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "1.5.0",
 	"description": "Hierarchical plain-text numbering (1. / 1.1. / 1.1.1.) driven by Tab, Shift-Tab, Enter and Alt-Up/Down.",
 	"author": "AlungranPJ",

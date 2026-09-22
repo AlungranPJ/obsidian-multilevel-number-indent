@@ -1,0 +1,47 @@
+name: Attest release assets
+
+# Gives every published release a build provenance attestation, so anyone can
+# verify that main.js and styles.css came from this repository. `main.js` is the
+# source here (hand-written CommonJS, no bundler), so the job first proves the
+# release assets are byte-identical to the committed files and then attests them.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  attest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the published release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "${{ github.event.release.tag_name || github.ref_name }}" \
+            --dir release-assets --clobber
+
+      - name: Check the assets match the committed files
+        run: |
+          set -euo pipefail
+          for f in main.js manifest.json styles.css; do
+            cmp "$f" "release-assets/$f"
+            echo "$f matches the committed file"
+          done
+
+      - name: Verify the core logic still passes
+        run: npm run build
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            main.js
+            styles.css

@@ -2,33 +2,25 @@
  * A root `1.` is a real Markdown list marker, so Obsidian renders a marker and
  * shifts the line, while `1.1.` and deeper are plain paragraphs. That makes the
  * levels jump by different amounts. The editor extension tags only the lines
- * this plugin recognises, and these rules remove the built-in offset from them.
+ * this plugin recognises, and these rules zero the built-in offsets on them.
+ *
+ * Obsidian reads those offsets from CSS variables, so resetting the variables
+ * on the line is enough. Nothing has to fight the theme for precedence.
  */
 .markdown-source-view.mod-cm6 .cm-line.nested-outline-numbering-line {
+	--list-padding-inline-start: 0px;
+	--list-marker-space: 0px;
+	--list-indent: 0px;
+	--list-indent-editing: 0px;
 	tab-size: 2;
 }
 
-.markdown-source-view.mod-cm6
-	.cm-line.nested-outline-numbering-line
-	.cm-formatting-list-ol {
-	padding-inline-start: 0 !important;
-}
-
-.markdown-source-view.mod-cm6
-	.cm-line.nested-outline-numbering-line
-	.cm-indent,
-.markdown-source-view.mod-cm6
-	.cm-line.nested-outline-numbering-line
-	.cm-indent-spacing:last-child {
-	min-width: 0 !important;
-	padding-inline-start: 0 !important;
-}
-
-.markdown-source-view.mod-cm6
-	.cm-line.nested-outline-numbering-line.HyperMD-codeblock {
-	padding-inline-start: 0 !important;
-	font-family: var(--font-text) !important;
-	font-size: var(--font-text-size) !important;
+/* Lines with four or more leading spaces are parsed as indented code blocks,
+ * but these lines are outline items. Drop the code block look. */
+.markdown-source-view.mod-cm6 .cm-content .cm-line.nested-outline-numbering-line.HyperMD-codeblock {
+	padding-inline-start: 0;
+	font-family: var(--font-text);
+	font-size: var(--font-text-size);
 	color: var(--text-normal);
 	direction: inherit;
 }

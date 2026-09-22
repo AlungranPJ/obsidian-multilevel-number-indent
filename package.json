@@ -1,6 +1,6 @@
 {
 	"name": "nested-outline-numbering",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Hierarchical plain-text numbering for Obsidian outlines.",
 	"private": true,
 	"license": "MIT",

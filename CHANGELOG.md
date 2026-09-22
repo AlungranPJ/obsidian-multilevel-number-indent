@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1
+
+Changes made in response to the community directory review.
+
+- CSS lint: `styles.css` no longer uses override flags. Obsidian reads its list offsets from CSS variables, so the plugin now resets `--list-padding-inline-start`, `--list-marker-space`, `--list-indent` and `--list-indent-editing` on the lines it recognises instead of forcing declarations.
+- Build verification: added `package-lock.json` so the dependency tree is reproducible.
+- Releases: added a GitHub Actions workflow that checks the published release assets are byte-identical to the committed files and attaches build provenance attestations to `main.js` and `styles.css`.
+
 ## 1.0.0
 
 Initial public release.
