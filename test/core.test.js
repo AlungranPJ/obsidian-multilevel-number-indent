@@ -33,6 +33,9 @@ class FakeEl {
 }
 
 class FakeComponent {
+	constructor() {
+		this.inputEl = {};
+	}
 	setValue(value) {
 		this.value = value;
 		return this;
@@ -49,6 +52,47 @@ class FakeComponent {
 	onChange(fn) {
 		this.change = fn;
 		return this;
+	}
+}
+
+class FakeButton {
+	setButtonText(text) {
+		this.text = text;
+		return this;
+	}
+	setTooltip(tooltip) {
+		this.tooltip = tooltip;
+		return this;
+	}
+	setCta() {
+		this.cta = true;
+		return this;
+	}
+	setDisabled(disabled) {
+		this.disabled = disabled;
+		return this;
+	}
+	onClick(fn) {
+		this.click = fn;
+		return this;
+	}
+}
+
+class FakeModal {
+	constructor(app) {
+		this.app = app;
+		this.contentEl = new FakeEl("div");
+		this.closed = false;
+	}
+	open() {
+		this.onOpen();
+	}
+	close() {
+		this.closed = true;
+		this.onClose();
+	}
+	empty() {
+		this.contentEl.empty();
 	}
 }
 
@@ -80,10 +124,26 @@ class FakeSetting {
 	addText(cb) {
 		return this.add("text", cb);
 	}
+	addToggle(cb) {
+		return this.add("toggle", cb);
+	}
+	addTextArea(cb) {
+		return this.add("textarea", cb);
+	}
+	addButton(cb) {
+		return this.add("button", cb);
+	}
+	/* A setting row can carry more than one component, so they are kept per
+	 * kind in the order they were added. `kind` and `component` stay on the
+	 * first one, which is what the row is identified by. */
 	add(kind, cb) {
-		this.kind = kind;
-		this.component = new FakeComponent();
-		cb(this.component);
+		if (!this.kind) this.kind = kind;
+		const component = kind === "button" ? new FakeButton() : new FakeComponent();
+		if (!this.component) this.component = component;
+		if (!this.parts) this.parts = {};
+		if (!this.parts[kind]) this.parts[kind] = [];
+		this.parts[kind].push(component);
+		cb(component);
 		return this;
 	}
 }
@@ -101,6 +161,8 @@ const stub = {
 	PluginSettingTab: FakePluginSettingTab,
 	Setting: FakeSetting,
 	MarkdownView: class {},
+	Modal: FakeModal,
+	ButtonComponent: FakeButton,
 	editorInfoField: {},
 	Prec: { highest: (x) => x, high: (x) => x },
 	keymap: { of: (x) => x },
@@ -527,22 +589,23 @@ check("templateFor reuses the last level", core.templateFor(["1.", "1.1."], 9), 
 
 console.log("normaliseFormats / setConfig");
 check("the shipped defaults", core.getConfig().formats, ["1.", "1.1.", "1.1.1.", "1)", "1.1)", "1.1.1)"]);
+/* Contract change in 3.0.0: the list keeps the length the user chose (2..12)
+ * instead of always padding to six, so the tab can add or drop levels. The
+ * position guarantee is unchanged: a blank row still takes the default for its
+ * own level instead of shifting every level below it. */
 check("a blank row takes the default for its level", core.normaliseFormats(["1.", "", "1.1.1."]), [
 	"1.",
 	"1.1.",
 	"1.1.1.",
-	"1)",
-	"1.1)",
-	"1.1.1)",
 ]);
 check("a row without a placeholder is replaced, never dropped", core.normaliseFormats(["a.", "..."]), [
 	"a.",
 	"1.1.",
-	"1.1.1.",
-	"1)",
-	"1.1)",
-	"1.1.1)",
 ]);
+check("the length the user chose is kept", core.normaliseFormats(["1.", "1.1."]).length, 2);
+check("a single row is lifted to the two level minimum", core.normaliseFormats(["1."]).length, 2);
+check("the list is capped at the maximum", core.normaliseFormats(new Array(40).fill("1.")).length, 12);
+check("an empty list falls back to two usable levels", core.normaliseFormats([]), ["1.", "1.1."]);
 check("a non-whitespace indent is refused", core.setConfig({ indent: "x" }).indent, "  ");
 check("a tab indent is accepted", core.setConfig({ indent: "\t" }).indent, "\t");
 core.setConfig({ indent: "  " });
@@ -608,6 +671,176 @@ check("the preview spells out the shipped defaults", core.previewLines(core.DEFA
 check("the preview follows a custom indent", core.previewLines(["1."], "\t", 2), ["1. Introduction", "\t1. Scope"]);
 check("the settings are back to the defaults", core.getConfig().formats, core.DEFAULT_SETTINGS.formats);
 
+/* --------------------------- 3.0.0 features --------------------------- */
+
+console.log("Thai number styles");
+check("Thai digits render", core.thaiDigit(21), "๒๑");
+check("Thai zero renders", core.thaiDigit(0), "๐");
+check("Thai letters render", core.thaiLetter(1), "ก");
+check("the last Thai letter in the set", core.thaiLetter(41), "ฮ");
+check("Thai letters roll over at the end of the set", core.thaiLetter(42), "กก");
+check("a Thai template renders a path", core.renderNumber([1, 2], 1, ["ข้อ ๑.", "ข้อ ๑.๑."], true), "ข้อ ๑.๒.");
+check("a Thai heading drops the closing dot", core.renderNumber([1, 2], 1, ["ข้อ ๑.", "ข้อ ๑.๑."], false), "ข้อ ๑.๒");
+check("a Thai template recognises its own text", new RegExp(core.templateToRe("ข้อ ๑.๑.")).test("ข้อ ๑.๒. เรื่อง"), true);
+
+console.log("the number of levels is a setting now");
+check("the list keeps a short shape", core.normaliseFormats(["1.", "1.1.", "1.1.1."]).length, 3);
+check("the list grows to the level asked for", core.normaliseFormats(new Array(8).fill("1.1.")).length, 8);
+/* The preview is one line per level, so a short list shows what the deeper
+ * levels become: the last configured template is reused. */
+check("the preview reuses the last template below the levels", core.previewLines(["1.", "1.1."], "  ", 4), [
+	"1. Introduction",
+	"  1.1. Scope",
+	"    1.1. Detail",
+	"      1.1. Point",
+]);
+
+/* renumberRange works in place on the lines it is given. */
+function v3Renumber(rows) {
+	const out = rows.slice();
+	core.renumberRange(out, 0, out.length - 1);
+	return out;
+}
+
+console.log("the depth policy decides what a deeper line becomes");
+check("reuse-last reuses the last template", core.stopsAt(4, ["1.", "1.1."], "reuse-last"), false);
+check("unnumbered stops at the last level", core.stopsAt(2, ["1.", "1.1."], "unnumbered"), true);
+check("unnumbered does not stop inside the levels", core.stopsAt(1, ["1.", "1.1."], "unnumbered"), false);
+core.setConfig({ formats: ["1.", "1.1."], depthPolicy: "unnumbered" });
+const stopped = v3Renumber(["1. alpha", "  9.9. beta", "    9.9.9. gamma"]);
+check("a deeper line drops back to body text", stopped, ["1. alpha", "  1.1. beta", "    gamma"]);
+check("Tab stops at the last level too", core.indentItem(["1. alpha", "  1.1. beta", "  1.2. gamma"], 2), null);
+core.setConfig({ depthPolicy: "reuse-last" });
+const reused = v3Renumber(["1. alpha", "  9.9. beta", "    9.9.9. gamma"]);
+check("reuse-last keeps numbering every level", reused, ["1. alpha", "  1.1. beta", "    1.1. gamma"]);
+check("an unknown policy is refused", core.setConfig({ depthPolicy: "sideways" }).depthPolicy, "reuse-last");
+core.setConfig({ formats: core.DEFAULT_SETTINGS.formats, depthPolicy: core.DEFAULT_SETTINGS.depthPolicy });
+
+console.log("presets");
+check("the shipped presets are listed first", core.presetList([]).slice(0, core.BUILTIN_PRESETS.length), core.BUILTIN_PRESETS);
+check("a saved preset joins the list", core.presetList([{ name: "Mine", formats: ["1."] }]).length, core.BUILTIN_PRESETS.length + 1);
+check("a preset is found by name", core.presetByName("Legal style", []), ["1.", "1.1", "1.1(a)", "1.1(a)(i)"]);
+check("an unknown preset is not found", core.presetByName("Nope", []), null);
+check("a saved preset overrides a shipped one with the same name", core.presetByName("Thai", [{ name: "Thai", formats: ["1."] }]), ["1.", "1.1."]);
+check("a valid JSON preset list is accepted", core.parsePresetsJson('[{"name":"Mine","formats":["a.","a.a."] }]').length, 1);
+check("a valid list keeps the level count", core.parsePresetsJson('[{"name":"Mine","formats":["a.","a.a."] }]')[0].formats.length, 2);
+check("bad JSON is refused as a whole", core.parsePresetsJson("{ nope"), null);
+check("a nameless entry is refused", core.parsePresetsJson('[{"formats":["1."] }]'), null);
+check("a row without a placeholder is refused", core.parsePresetsJson('[{"name":"Mine","formats":["nope"] }]'), null);
+check("a half pasted document applies nothing", core.parsePresetsJson('[{"name":"Mine","formats":["1."] }, 5]'), null);
+check("saved presets round trip through JSON", core.renderPresetsJson([{ name: "Mine", formats: ["1."] }]), '[\n\t{\n\t\t"name": "Mine",\n\t\t"formats": [\n\t\t\t"1."\n\t\t]\n\t}\n]');
+
+console.log("per-note settings from the frontmatter");
+check("a note without frontmatter has no overrides", core.parseNoteConfig("1. alpha\n"), {});
+check("a note without a numbering block has no overrides", core.parseNoteConfig("---\ntitle: x\n---\n1. alpha\n"), {});
+const noteCfg = core.parseNoteConfig('---\nnumbering:\n  indent: "\\t"\n  depth-policy: unnumbered\n  formats:\n    - "1."\n    - "1.1."\n---\n');
+check("the indent is read", noteCfg.indent, "\t");
+check("the depth policy is read", noteCfg.depthPolicy, "unnumbered");
+check("the formats are read as a block list", noteCfg.formats, ["1.", "1.1."]);
+const flowCfg = core.parseNoteConfig('---\nnumbering:\n  formats: ["a.", "a.a.", "a.a.a."]\n---\n');
+check("a flow list works too", flowCfg.formats, ["a.", "a.a.", "a.a.a."]);
+const badCfg = core.parseNoteConfig('---\nnumbering:\n  indent: "x"\n  depth-policy: sideways\n  formats:\n    - "nope."\n---\n');
+check("an unusable indent is ignored", badCfg.indent, undefined);
+check("an unknown policy is ignored", badCfg.depthPolicy, undefined);
+check("a row without a placeholder falls back to the default", badCfg.formats, ["1.", "1.1."]);
+check("a quoted tab is unescaped", core.parseScalar('"\\t"'), "\t");
+check("a single quoted scalar keeps its text", core.parseScalar("'a\\t'"), "a\\t");
+check("a bare scalar is trimmed", core.parseScalar("  ok  "), "ok");
+
+console.log("normalize");
+check("trailing whitespace goes", core.normalizeOutline(["1. alpha   "], 0, 0), ["1. alpha"]);
+check("a jammed number gets its space back", core.normalizeOutline(["1.alpha"], 0, 0), ["1. alpha"]);
+check("a long jammed number keeps its whole prefix", core.normalizeOutline(["1. alpha", "  1.1.beta"], 0, 1), ["1. alpha", "  1.1. beta"]);
+check("an indent shorter than a unit grows into one", core.normalizeOutline(["1. alpha", " 1.1. beta"], 0, 1), ["1. alpha", "  1.1. beta"]);
+check("the numbers follow the depth, not what was typed", core.normalizeOutline(["9. alpha", "  9.9. beta"], 0, 1), ["1. alpha", "  1.1. beta"]);
+check("a note already in shape is left alone", core.normalizeOutline(["1. alpha"], 0, 0), null);
+check("text without a number is never invented", core.normalizeOutline(["plain"], 0, 0), null);
+
+console.log("smart paste");
+check("bullets become numbers", core.ingestOutline("• alpha\n• beta"), ["1. alpha", "2. beta"]);
+check("word numbers are taken off", core.ingestOutline("(1) alpha\n(2) beta"), ["1. alpha", "2. beta"]);
+check("Thai markers are taken off", core.ingestOutline("๑. alpha\n๒. beta"), ["1. alpha", "2. beta"]);
+check("a nested pasted list keeps its shape", core.ingestOutline("1. alpha\n   1.1. beta\n   1.2. gamma"), [
+	"1. alpha",
+	"  1.1. beta",
+	"  1.2. gamma",
+]);
+check("blank lines survive the paste", core.ingestOutline("• alpha\n\n• beta"), ["1. alpha", "", "2. beta"]);
+check("a plain list is still a list", core.ingestOutline("alpha\nbeta"), ["1. alpha", "2. beta"]);
+check("one line of prose is not a list", core.looksLikeOutline("just one line of text"), false);
+check("two bullets are a list", core.looksLikeOutline("• alpha\n• beta"), true);
+check("two depths are a list", core.looksLikeOutline("alpha\n  beta"), true);
+
+console.log("clean text");
+check("a wiki link becomes its text", core.cleanForExport("see [[Note]] here"), "see Note here");
+check("an alias wins", core.cleanForExport("[[Note|the note]]"), "the note");
+check("an image keeps its alias", core.cleanForExport("![[pic.png|a picture]]"), "a picture");
+check("a callout keeps its title", core.cleanForExport("> [!note] The title\n> body"), "The title\nbody");
+check("a comment goes", core.cleanForExport("a %%hidden%% b"), "a  b");
+check("emphasis goes", core.cleanForExport("**bold** and `code`"), "bold and code");
+check("a heading mark goes", core.cleanForExport("## Title"), "Title");
+check("a bullet goes", core.cleanForExport("- item"), "item");
+
+console.log("rich output");
+const v3Rows = ["1. alpha", "  1.1. beta & co"];
+check("a nested list is real html", core.buildHtmlOutline(v3Rows, "list"), '<ol class="multilevel-number-indent"><li>alpha<ol><li>beta &amp; co</li></ol></li></ol>');
+check("keeping the numbers puts them in the text", core.buildHtmlOutline(v3Rows, "keep-numbers"), '<ul class="multilevel-number-indent"><li>1. alpha<ul><li>1.1. beta &amp; co</li></ul></li></ul>');
+check("rtf ends every line", core.buildRtfOutline(["1. alpha"]).endsWith("\\line }"), true);
+check("rtf escapes braces", core.rtfEscape("a{b"), "a\\{b");
+
+console.log("several lines at once");
+const v3Group = ["1. alpha", "  1.1. one", "  1.2. beta", "    1.2.1. kid", "  1.3. gamma", "2. delta"];
+const v3Indented = core.applyActionRange(v3Group, 2, 3, "indent");
+check("a group indents one level with its subtree", v3Indented.lines, [
+	"1. alpha",
+	"  1.1. one",
+	"    1.1.1. beta",
+	"      1) kid",
+	"  1.2. gamma",
+	"2. delta",
+]);
+check("the caret stays on the first line of the group", v3Indented.caretLine, 2);
+const v3Outdented = core.applyActionRange(v3Indented.lines, 2, 3, "outdent");
+check("a group outdents one level", v3Outdented.lines, v3Group);
+check("a group with no earlier sibling does not indent", core.applyActionRange(v3Group, 1, 2, "indent"), null);
+
+console.log("a group swaps with its neighbours");
+const v3Swapped = core.applyActionRange(["1. alpha", "  1.1. a", "  1.2. b", "    1.2.1. c", "  1.3. d", "2. e"], 1, 2, "moveDown");
+check("the whole group moves as one", v3Swapped.lines, [
+	"1. alpha",
+	"  1.1. d",
+	"  1.2. a",
+	"  1.3. b",
+	"    1.3.1. c",
+	"2. e",
+]);
+check("the caret follows the group", v3Swapped.lines[v3Swapped.caretLine], "  1.2. a");
+
+console.log("cut and paste as a subtree");
+const v3Cut = core.cutItem(["1. alpha", "  1.1. beta", "    1.1.1. gamma", "  1.2. delta"], 1);
+check("a cut takes the item and its subtree", v3Cut.taken, ["  1.1. beta", "    1.1.1. gamma"]);
+check("the block is renumbered after a cut", v3Cut.lines, ["1. alpha", "  1.1. delta"]);
+const v3Pasted = core.pasteItem(["1. alpha", "  1.1. delta"], 0, ["2. moved", "  2.1. child"]);
+check("a paste lands after the target subtree at its level", v3Pasted.lines, [
+	"1. alpha",
+	"  1.1. delta",
+	"2. moved",
+	"  2.1. child",
+]);
+check("the caret lands on the pasted item", v3Pasted.caretLine, 2);
+
+console.log("move to a level");
+const v3Levelled = core.setLevel(["1. alpha", "  1.1. beta", "    1.1.1. gamma", "  1.2. delta"], 2, 1);
+check("moving to a level moves the subtree", v3Levelled.lines, ["1. alpha", "  1.1. beta", "  1.2. gamma", "  1.3. delta"]);
+check("an item already at that level is left alone", core.setLevel(["1. alpha"], 0, 0), null);
+
+console.log("indent guide and status bar");
+check("the guide draws one rule per level", core.guideStyle("  ", 2).includes("ch * 2"), true);
+check("a line with no depth draws nothing", core.guideStyle("  ", 0), "");
+check("the guide tracks the indent unit", core.guideStyle("\t", 1).includes("4ch"), true);
+check("the status names the level and the number", core.statusFor(["1. alpha", "  1.1. beta"], 1), "Level 2 · 1.1.");
+check("a plain line says nothing", core.statusFor(["plain"], 0), "");
+
 /* ---------------------------- settings tab ---------------------------- */
 
 /* The tab is regular code, so it can be built against the doubles above and
@@ -617,7 +850,15 @@ const tabWork = (async () => {
 
 	const DEFAULTS = core.DEFAULT_SETTINGS;
 	const plugin = {
-		settings: { indent: DEFAULTS.indent, formats: DEFAULTS.formats.slice() },
+		settings: {
+			indent: DEFAULTS.indent,
+			formats: DEFAULTS.formats.slice(),
+			depthPolicy: DEFAULTS.depthPolicy,
+			presets: [],
+			formatOnPaste: false,
+			indentGuides: true,
+		},
+		app: { clipboard: { write() {} } },
 		saves: 0,
 		async saveSettings() {
 			this.saves += 1;
@@ -628,13 +869,15 @@ const tabWork = (async () => {
 	tab.display();
 
 	const children = tab.containerEl.children;
-	const settings = children.filter((c) => c instanceof FakeSetting);
-	const rows = settings.filter((s) => s.kind === "text");
+	const read = () => tab.containerEl.children.filter((c) => c instanceof FakeSetting);
+	const isLevel = (s) => typeof s.name === "string" && s.name.startsWith("Level ");
+	const settings = read();
+	const rows = settings.filter(isLevel);
 	const dropdown = settings.find((s) => s.kind === "dropdown");
 	const headings = settings.filter((s) => s.isHeading).map((s) => s.name);
 	const preview = children.find((c) => c.tag === "pre");
 
-	check("headings go through setHeading, not raw html", headings, ["Number format", "Preview"]);
+	check("headings go through setHeading, not raw html", headings, ["Number format", "Presets", "Preview"]);
 	check("the indent dropdown offers three widths", Object.keys(dropdown.component.options).length, 3);
 	check("the indent dropdown shows the current value", dropdown.component.value, DEFAULTS.indent);
 	check("one text row per level", rows.length, DEFAULTS.formats.length);
@@ -643,18 +886,71 @@ const tabWork = (async () => {
 	check("the preview element exists", preview !== undefined, true);
 	check("the preview renders the current settings", preview.textContent, core.previewLines(DEFAULTS.formats, DEFAULTS.indent, 6).join("\n"));
 
+	console.log("the tab can add and drop levels");
+	check("every level row can be dropped", rows.every((r) => r.parts.button && r.parts.button.length === 1), true);
+	check("no row is dropped below the minimum", rows.every((r) => r.parts.button[0].disabled === (DEFAULTS.formats.length <= 2)), true);
+	const addRow = settings.find((s) => s.name === "Add level");
+	check("the add level row is offered", addRow !== undefined, true);
+	await addRow.parts.button[0].click();
+	check("adding a level lengthens the list", read().filter(isLevel).length, DEFAULTS.formats.length + 1);
+	check("the new level takes the shipped shape", plugin.settings.formats[DEFAULTS.formats.length], core.templateFor(DEFAULTS.formats, DEFAULTS.formats.length));
+	await read().filter(isLevel).pop().parts.button[0].click();
+	check("dropping a level shortens the list", read().filter(isLevel).length, DEFAULTS.formats.length);
+	check("the list is back to the shipped ones", plugin.settings.formats, DEFAULTS.formats);
+
+	console.log("the tab carries the new behaviour settings");
+	const policyRow = read().find((s) => s.name === "Deeper than the last level");
+	check("the depth policy offers two choices", Object.keys(policyRow.component.options).length, 2);
+	check("the depth policy shows the current value", policyRow.component.value, DEFAULTS.depthPolicy);
+	const pasteRow = read().find((s) => s.name === "Format pasted lists");
+	check("pasted lists are formatted only when asked", pasteRow.component.value, false);
+	const guideRow = read().find((s) => s.name === "Indent guides");
+	check("the guides are on by default", guideRow.component.value, true);
+	await guideRow.component.change(false);
+	check("turning the guides off is saved", plugin.settings.indentGuides, false);
+
+	console.log("presets can be applied and saved");
+	const applyRow = read().find((s) => s.name === "Apply a preset");
+	check("every shipped preset is offered", Object.keys(applyRow.component.options).length, core.BUILTIN_PRESETS.length);
+	await applyRow.component.change("Legal style");
+	await applyRow.parts.button[0].click();
+	check("applying a preset replaces the levels", plugin.settings.formats, ["1.", "1.1", "1.1(a)", "1.1(a)(i)"]);
+	const saveRow = read().find((s) => s.name === "Save the current list");
+	await saveRow.component.change("Mine");
+	await saveRow.parts.button[0].click();
+	check("saving keeps the current list under a name", plugin.settings.presets.length, 1);
+	check("the saved preset carries the levels", plugin.settings.presets[0].formats, ["1.", "1.1", "1.1(a)", "1.1(a)(i)"]);
+	const jsonRow = read().find((s) => s.name === "Preset JSON");
+	check("import and export are both offered", jsonRow.parts.button.map((b) => b.text), ["Export", "Import"]);
+	await jsonRow.component.change("nope");
+	await jsonRow.parts.button[1].click();
+	check("a bad import changes nothing", plugin.settings.presets.length, 1);
+	await jsonRow.component.change('[{"name": "Two", "formats": ["a.", "a.a."] }]');
+	await jsonRow.parts.button[1].click();
+	check("a good import replaces the saved list", plugin.settings.presets.map((p) => p.name), ["Two"]);
+
+	/* Put the shipped formats back before the editing checks below, which
+	 * describe them, and read the rows again: the tab rebuilt itself above. */
+	core.setConfig({ indent: DEFAULTS.indent, formats: DEFAULTS.formats, depthPolicy: DEFAULTS.depthPolicy });
+	plugin.settings.formats = DEFAULTS.formats.slice();
+	plugin.settings.depthPolicy = DEFAULTS.depthPolicy;
+	plugin.settings.indentGuides = true;
+	tab.display();
+	const liveRows = read().filter(isLevel);
+	const livePreview = tab.containerEl.children.find((c) => c.tag === "pre");
+
 	console.log("editing a template updates the preview");
-	await rows[0].component.change("a)");
+	await liveRows[0].component.change("a)");
 	check("the change is saved", plugin.saves > 0, true);
 	check("the new template is kept", plugin.settings.formats[0], "a)");
-	check("the preview follows the change", preview.textContent.split("\n")[0], "a) Introduction");
-	check("a valid row keeps an empty description", rows[0].desc, "");
+	check("the preview follows the change", livePreview.textContent.split("\n")[0], "a) Introduction");
+	check("a valid row keeps an empty description", liveRows[0].desc, "");
 
 	console.log("an invalid row is refused without shifting the levels");
-	await rows[1].component.change("...");
+	await liveRows[1].component.change("...");
 	check("a row without a placeholder keeps the previous value", plugin.settings.formats[1], DEFAULTS.formats[1]);
-	check("the row says why", rows[1].desc.includes("No placeholder"), true);
-	check("the preview falls back to the default for that level", preview.textContent.split("\n")[1], "  1.1. Scope");
+	check("the row says why", liveRows[1].desc.includes("No placeholder"), true);
+	check("the preview falls back to the default for that level", livePreview.textContent.split("\n")[1], "  1.1. Scope");
 
 	/* leave the core exactly as it was found */
 	core.setConfig({ indent: DEFAULTS.indent, formats: DEFAULTS.formats });

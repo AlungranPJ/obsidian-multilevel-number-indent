@@ -1,6 +1,6 @@
 {
 	"name": "nested-outline-numbering",
-	"version": "2.0.1",
+	"version": "3.0.0",
 	"description": "Hierarchical plain-text numbering for outlines and notes, driven by Tab, Shift-Tab, Enter and Alt-Arrow, in any number format you set.",
 	"private": true,
 	"license": "MIT",

@@ -1,5 +1,36 @@
 # Changelog
 
+## 3.0.0
+
+The release is about one thing: formatting that leaves you with text you can use, and a settings tab that fits the note instead of the other way round.
+
+- **As many levels as the note needs.** `Add level` and `Remove` sit on every row of the settings tab, two at the least and twelve at the most. A new setting decides what a line deeper than the last level becomes: reuse the last level's shape, or leave it as body text with its indent kept and no number. With the second choice <kbd>Tab</kbd> stops working past the last level instead of pushing items out of the outline.
+- **Presets.** Six ship with the plugin: dotted then brackets, full path dots, letters, roman numerals, legal style and Thai. Save the current level list under a name, and move the saved ones between machines as JSON. A saved preset that carries a shipped name replaces it.
+- **Thai number styles.** `ก` renders `ก` `ข` `ค` and `๑` renders `๑` `๒` `๓`, so `ข้อ ๑.` or `(ก)` are written the same way `1.1(a)` is.
+- **Per-note formats** from the note's frontmatter, under a `numbering:` block: `indent`, `depth-policy` and `formats`. The global settings are restored on the next note.
+- **`Normalize the outline`** puts a drifted note back into shape: the indent becomes whole units of the configured width, a jammed `1.text` gets its space back, trailing whitespace goes, and every number is recomputed from the real depth.
+- **Smart paste** turns a list from Word, Docs, a web page or a chat into this numbering, foreign bullets and foreign numbers included. Opt-in through `Format pasted lists`, and it only fires on text that really looks like a list. `Turn the selection into a numbered outline` does the same for a selection.
+- **Text that is ready to use.** `Copy as clean text` strips links, callout markers, comments and emphasis. `Save the selection as a clean note` writes it to a new file. `Copy as formatted text` and `Copy as a real nested list` put HTML and RTF on the clipboard, so Word and a mail client see the numbering or a real list instead of raw Markdown.
+- **Multi-line selections** move as one group: <kbd>Tab</kbd>, <kbd>Shift</kbd>+<kbd>Tab</kbd> and <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> work over several items at once, subtrees included, and the caret stays on the first line of the group.
+- **`Cut the item with its subtree`**, **`Paste the cut item here`** and **`Move the item to a level`**, for the moves that are about structure rather than one keystroke.
+- **Indent guides**, one faint rule per level drawn as a background so the text and the clipboard are never touched, and a **status bar** that names the level and the number under the cursor.
+- Fixed: blank lines between two siblings were dropped when <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> swapped them. They stay between the two items now.
+- Body text written deeper than an item no longer splits the numbering block, so an item keeps its own count across its notes.
+
+## 2.0.1
+
+Changes made in response to the community directory review.
+
+- The plugin id went back to `nested-outline-numbering`, the id the directory entry is registered under. The display name stays **Multilevel Number Indent** and the repository stays `obsidian-multilevel-number-indent`.
+- The manifest description no longer names Obsidian, which the directory style guide rules out.
+
+## 2.0.0
+
+- Renamed to **Multilevel Number Indent**.
+- The three core commands read `Renumber multilevel block`, `Insert multilevel numbering` and `Remove multilevel numbering`.
+- New banner and example artwork, and a CI workflow that checks the entry file parses and the shipped shape is intact.
+- `.gitattributes` keeps every text file at LF, so a fresh clone produces the same bytes as the release assets.
+
 ## 1.2.0
 
 - **Settings tab.** One number template per level, plus the indent width, with a live preview of the result. Placeholders render the counter (`1` arabic, `a`/`A` letters, `i`/`I` roman numerals) and every other character is literal, so the separators and the closing mark are yours to choose.
