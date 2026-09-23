@@ -3,47 +3,64 @@
 [![Release](https://img.shields.io/github/v/release/AlungranPJ/obsidian-multilevel-number-indent?style=flat-square&label=release&labelColor=27272a&color=f97316)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/AlungranPJ/obsidian-multilevel-number-indent/ci.yml?style=flat-square&label=CI&labelColor=27272a)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-270_passing-f97316?style=flat-square&labelColor=27272a)](#development)
-[![Obsidian](https://img.shields.io/badge/Obsidian-1.5%2B-52525b?style=flat-square&labelColor=27272a)](#compatibility)
 [![License](https://img.shields.io/badge/license-MIT-52525b?style=flat-square&labelColor=27272a)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/AlungranPJ/obsidian-multilevel-number-indent/total?style=flat-square&label=downloads&labelColor=27272a&color=52525b)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/releases)
 
-This is the multilevel list you know from Word, rebuilt around the fact that a note is a text file.
+The multilevel list you know from Word, rebuilt around the fact that a note is a text file.
 
-You press <kbd>Tab</kbd>, the item steps one level deeper and its whole subtree comes along. The numbers are written into the note as **real characters**, not painted on by a stylesheet, so they travel with the text: into a copy and paste, into an export, into git, into any other Markdown editor you open the file with. And when the outline has to leave the note, it leaves as something you can hand to a person: clean prose, a real nested list, or rich text with the numbering exactly as you wrote it.
+Press <kbd>Tab</kbd> and the item steps one level deeper, subtree and all. The numbers are **real characters in the file**, not a stylesheet trick, so they travel with the text: into a copy, into an export, into git, into any other Markdown editor. And when the outline has to leave the note, it leaves as something you can hand to a person: clean prose, a real nested list, or rich text with the numbering exactly as you wrote it.
 
 ![Multilevel Number Indent in Obsidian: 1. / 1.1. / 1.2.1. down to 1) and 2.1)](assets/demo.png)
+
+<details>
+<summary><strong>Contents</strong></summary>
+
+- [Why this one](#why-this-one)
+- [The keys](#the-keys)
+- [The number format](#the-number-format)
+- [Settings](#settings)
+- [Getting text out](#getting-text-out)
+- [Heading numbering](#heading-numbering)
+- [Commands](#commands)
+- [What this plugin touches](#what-this-plugin-touches)
+- [Installation](#installation)
+- [Compatibility](#compatibility)
+- [How it works](#how-it-works)
+- [Development](#development)
+- [Known limitations](#known-limitations)
+
+</details>
 
 ## Why this one
 
 | | |
 |---|---|
-| **The number format is yours** | `1.` `1.1.` `1.1.1.` `1)` `a)` `I.` `ข้อ ๑.` whatever you can build out of the placeholders. Set it in the settings tab and watch the preview rewrite itself while you type. |
-| **As deep as the note needs** | Levels come and go in the settings tab, two at a minimum and twelve at a maximum. Past the last one you choose what happens: keep numbering, or let the line be body text with its indent kept. |
+| **The number format is yours** | `1.` `1.1.` `1)`, `a)`, `I.`, `ข้อ ๑.` — anything you can build from the placeholders. The preview rewrites itself while you type. |
+| **As deep as the note needs** | Grow or shrink the level list from two to twelve. Past the last level you choose: keep numbering, or leave the line as body text with its indent kept. |
 | **In from anywhere, out to anywhere** | Paste a list from Word or a web page and it becomes this numbering. Send it back out as clean text, rich text, or a real nested list the target app numbers itself. |
-| **Moving items is a first-class thing** | <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> swaps an item with the sibling at its own level, subtree and all, and leaves the caret sitting on the item. Select a few and they move as one group. |
+| **Moving items is a first-class thing** | <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> swaps an item with the sibling at its own level, subtree and all, and leaves the caret on the item. Select a few and they move as one group. |
 | **Headings run on the same engine** | `# 1 Introduction`, `## 1.1 Scope`, `#### 1) Point`. Same templates, same rules, same renumbering. |
 | **It stays in your vault** | No network calls, no telemetry, no dependencies at runtime, and no build step in the shipped file. |
 | **The releases are checkable** | Every asset is byte-compared against the committed file and carries a build provenance attestation. |
 
-## New in 3.0.0
+<details>
+<summary><strong>What's new in 3.0.0</strong> — the settings tab bends to the note, and the text that comes out is ready to use</summary>
 
-This one is about the two things that were still getting in the way: getting **text you can actually use** out of the plugin, and a settings tab that bends to the note instead of the other way round.
-
-- **Grow or shrink the level list** right in the settings tab, and decide what a line past the last level becomes. Pick "leave it as text" and the notes under an item stay body text: <kbd>Tab</kbd> then stops at the edge of the outline instead of pushing those notes out of it.
-- **Presets**, so nobody has to build `1.1(a)` by hand. Six come with the plugin, you can save your own, and the whole set moves between machines as JSON. Save under a name a shipped preset already uses and yours takes its place.
+- **Grow or shrink the level list** in the settings tab, and decide what a line past the last level becomes.
+- **Presets**, so nobody has to build `1.1(a)` by hand. Six come with the plugin, you can save your own, and the set travels between machines as JSON.
 - **Thai number styles**: `ก` for `ก` `ข` `ค`, `๑` for `๑` `๒` `๓`. `ข้อ ๑.` is written the same way `1.1(a)` is.
-- **Per-note formats** in the frontmatter, so a legal note and a workshop note can live in one vault in different shapes. The global settings come back on the next note without you touching anything.
-- **`Normalize the outline`** for the note that drifted. It puts the indent back into whole units, gives `1.text` its space back, drops trailing whitespace, and rewrites every number to match the indentation.
-- **Smart paste** for lists that arrive from somewhere else. Bullets, `1)`, `๑.`, `ก.` all become this numbering. It is opt-in and it only fires when the clipboard really looks like a list, so prose stays prose.
-- **Clean text on the way out**: links become their display text, callouts keep their titles and lose their markers, comments and emphasis go. `Save the selection as a clean note` drops it into a new file.
-- **Rich text on the way out** too: HTML and RTF with the numbering kept as literal text, or as a real nested list so Word and mail clients number it themselves.
-- **Multi-line selections move as one group**, subtrees included, which is what you wanted every time you tried to reorder a whole section.
+- **Per-note formats** in the frontmatter, so a legal note and a workshop note can live in one vault in different shapes.
+- **`Normalize the outline`** puts a drifted note back: whole-unit indents, the space back after `1.text`, trailing whitespace gone, every number recomputed.
+- **Smart paste** turns foreign bullets and numbers into this numbering. Opt-in, and it only fires when the clipboard really looks like a list.
+- **Clean text on the way out**: links become their display text, callouts keep their titles and lose their markers, comments and emphasis go.
+- **Rich text on the way out**: HTML and RTF with the numbering kept, or as a real nested list so Word and mail clients number it themselves.
+- **Multi-line selections move as one group**, subtrees included.
 - **Cut and paste as a subtree**, and **Move the item to a level**, for the moves that are about structure rather than one keystroke.
-- **Indent guides**, one faint rule per level drawn as a background so the text itself is untouched, and a **status bar** that names the level and the number under the cursor.
+- **Indent guides** and a **status bar** that names the level and the number under the cursor.
 
-Also fixed on the way: blank lines between two siblings used to disappear when <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> swapped them, and body text written deeper than an item used to split the numbering block and restart the count. Both behave now.
+Also fixed: blank lines between two siblings no longer disappear when <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> swaps them, and body text written deeper than an item no longer restarts the count. [Full changelog](CHANGELOG.md)
 
-![The settings tab: as many levels as the note needs, and what happens past the last one](assets/settings.png)
+</details>
 
 ## The keys
 
@@ -56,7 +73,7 @@ Also fixed on the way: blank lines between two siblings used to disappear when <
 
 A selection that spans several lines moves as one group: every item keeps its subtree, and the caret stays on the first line of the group.
 
-Every key is scoped to lines this plugin recognises. Everywhere else nothing happens, so <kbd>Tab</kbd> keeps Obsidian's normal indent behaviour and <kbd>Enter</kbd> keeps working in tables, code blocks and prose. <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> never changes depth: at the top or bottom of a level it simply does nothing, and <kbd>Tab</kbd> or <kbd>Shift</kbd>+<kbd>Tab</kbd> is how you change depth. The caret follows the item to wherever it lands.
+Every key is scoped to lines this plugin recognises. Everywhere else nothing happens: <kbd>Tab</kbd> keeps Obsidian's normal indent behaviour, <kbd>Enter</kbd> keeps working in tables, code blocks and prose, and <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> never changes depth. The caret follows the item to wherever it lands.
 
 ## The number format
 
@@ -72,17 +89,15 @@ Out of the box it looks like this:
 2. Summary
 ```
 
-Levels 1 to 3 show the full path and end with a period: `1.` `1.1.` `1.1.1.` Level 4 and deeper restart the count and end with a bracket: `1)` `1.1)`. Each level adds two spaces of indent, so the text always starts four columns further to the right and lines up on a plain grid.
+Levels 1 to 3 show the full path and end with a period: `1.` `1.1.` `1.1.1.` Level 4 and deeper restart the count and end with a bracket: `1)` `1.1)`. Each level adds two spaces of indent, so the text always starts four columns further right and lines up on a plain grid.
 
-The level comes from the indentation, never from the number. That is why pressing <kbd>Tab</kbd> rewrites the number instead of only moving the line: `1.1.1.` becomes `1)` when it drops to level 4, and `1)` becomes `1.1.2.` when it moves back up. The caret stays in the text either way, so you end up typing at the end of the line and never in the middle of the number.
+The level comes from the indentation, never from the number. That is why <kbd>Tab</kbd> rewrites the number instead of only moving the line: `1.1.1.` becomes `1)` at level 4, and `1)` becomes `1.1.2.` when it moves back up. The caret stays in the text, never in the middle of a number.
 
 `1.1.` is deliberately not a Markdown list marker. That is the whole trick: the numbers are plain text, so they travel with the note. A root `1.` is the one exception, and `styles.css` undoes Obsidian's list indent on the recognised lines so every level stays on the same grid.
 
 ![The same outline rendered in six number formats](assets/example.svg)
 
 ### Placeholders
-
-**Settings → Multilevel Number Indent** holds one template per level plus the indent width, and previews the result live as you type.
 
 | Placeholder | Renders |
 |---|---|
@@ -92,7 +107,7 @@ The level comes from the indentation, never from the number. That is why pressin
 | `ก` | `ก` `ข` `ค` … |
 | `๑` | `๑` `๒` `๓` … |
 
-Everything else in a template is a plain character you typed, so the separators and the closing mark are yours to choose. What the placeholders decide is how much of the path a level shows: one placeholder means one segment, three mean the full path. That is why the shipped defaults restart the count at level 4, where the row is `1)`:
+Everything else in a template is a plain character you typed, so the separators and the closing mark are yours. What the placeholders decide is how much of the path a level shows: one placeholder means one segment, three mean the full path. That is why the shipped defaults restart the count at level 4, where the row is `1)`.
 
 ```text
 1.1.1.     ->  1.1.1.         full path, closed with a period
@@ -104,11 +119,11 @@ I.         ->  I. II. III.    roman numerals
 1.1(a)     ->  1.1(a)         legal style
 ```
 
-A row with no placeholder in it is ignored, and that level keeps the value it had before. Changing the format later is also safe: numbers written in the old shape are still recognised, and the next <kbd>Tab</kbd> rewrites them into the new one.
+A row with no placeholder is ignored, and that level keeps the value it had. Changing the format later is safe: numbers in the old shape are still recognised, and the next <kbd>Tab</kbd> rewrites them into the new one.
 
 ### Levels, and what comes after them
 
-Make the level list as long as the note needs: every row has **Add level** and **Remove**, and the list can run from two levels to twelve. What happens past the last level is a separate setting, **Deeper than the last level**:
+Every row in the level list has **Add level** and **Remove**. What happens past the last level is a separate setting, **Deeper than the last level**:
 
 - **Reuse the last level** keeps numbering at every depth, however deep the note goes. This is the shipped setting.
 - **Leave it as text** keeps the indent and drops the number. Use it for notes that belong to an item rather than being part of the outline: <kbd>Tab</kbd> then stops at the last level instead of pushing those notes out of the outline.
@@ -132,11 +147,26 @@ numbering:
 
 ### Presets
 
-A preset is a whole level list saved under a name. Six come with the plugin: dotted then brackets, full path dots, letters, roman numerals, legal style and Thai. **Apply a preset** replaces the level list with the preset's, **Save the current list** saves what you built under a name of yours, and saving under a name that already exists replaces the old one.
+A preset is a whole level list saved under a name. Six come with the plugin: dotted then brackets, full path dots, letters, roman numerals, legal style and Thai. **Apply a preset** replaces the level list, **Save the current list** saves what you built, and saving under a name that already exists replaces the old one.
 
-The **Preset JSON** box is how the saved ones travel: **Export** copies them to the clipboard ready for another machine, **Import** reads the box and replaces the saved list, and anything that is not a clean list of presets is refused rather than half imported.
+**Preset JSON** is how the saved ones travel: **Export** copies them to the clipboard for another machine, **Import** reads the box and replaces the saved list. Anything that is not a clean list of presets is refused rather than half imported.
 
-## Getting text you can actually use
+## Settings
+
+Everything lives in one tab, **Settings → Multilevel Number Indent**.
+
+![The settings tab: as many levels as the note needs, and what happens past the last one](assets/settings.png)
+
+| Section | What is in it |
+|---|---|
+| **Indent per level** | Two spaces, four spaces, or one tab |
+| **Deeper than the last level** | Reuse the last level, or leave the line as text |
+| **Format pasted lists** | Converts pasted lists on <kbd>Ctrl</kbd>+<kbd>V</kbd>. Ships switched off |
+| **Indent guides** | One faint rule per level, drawn as a background |
+| **Number format** | One template per level, with **Add level** and **Remove**, and a live preview |
+| **Presets** | Six built in, save your own, and **Preset JSON** to move the set between machines |
+
+## Getting text out
 
 The numbering is only half the job. What matters is the text that comes out.
 
@@ -144,18 +174,18 @@ The numbering is only half the job. What matters is the text that comes out.
 
 | Command | What it does |
 |---|---|
-| `Normalize the outline` | Puts a drifted note back into shape and renumbers it from the real depth. |
-| `Turn the selection into a numbered outline` | Takes a pasted list apart and rebuilds it in this numbering, foreign bullets and foreign numbers included. |
-| `Copy as clean text` | The selection as prose: links become their display text, callout markers and comments and emphasis go. Ready for a report or an email. |
-| `Save the selection as a clean note` | The same cleaned text, written to a new note. |
-| `Copy as formatted text` | HTML and RTF on the clipboard with the numbering kept exactly as it reads in the note. |
-| `Copy as a real nested list` | HTML and RTF on the clipboard as a real nested list, so Word and mail clients number it themselves. |
+| `Normalize the outline` | Puts a drifted note back into shape and renumbers it from the real depth |
+| `Turn the selection into a numbered outline` | Takes a pasted list apart and rebuilds it in this numbering, foreign bullets and foreign numbers included |
+| `Copy as clean text` | The selection as prose: links become their display text, callout markers and comments and emphasis go |
+| `Save the selection as a clean note` | The same cleaned text, written to a new note |
+| `Copy as formatted text` | HTML and RTF with the numbering kept exactly as it reads in the note |
+| `Copy as a real nested list` | HTML and RTF as a real nested list, so Word and mail clients number it themselves |
 
-**Format pasted lists** in the settings tab does that conversion automatically when you press <kbd>Ctrl</kbd>+<kbd>V</kbd>. It ships switched off, and it only fires on text that really looks like a list.
+**Format pasted lists** in the settings tab does that first conversion automatically on <kbd>Ctrl</kbd>+<kbd>V</kbd>. It ships switched off, and it only fires on text that really looks like a list.
 
 ## Heading numbering
 
-Headings use the same templates with the closing period dropped, so levels 1 to 3 read `# 1 Introduction`, `## 1.1 Scope`, `### 1.1.1 Detail`. From level 4 they follow the plain-text rule and end with a bracket: `#### 1) Point`, `##### 1.1) Detail`.
+Headings use the same templates with the closing period dropped: `# 1 Introduction`, `## 1.1 Scope`, `### 1.1.1 Detail`. From level 4 they follow the plain-text rule and end with a bracket: `#### 1) Point`, `##### 1.1) Detail`.
 
 Changing a heading level or moving a section renumbers the note automatically, but only **once the note is in numbered mode**, that is, once at least one heading carries a number. A note with no numbers is left alone, so <kbd>Tab</kbd> never starts numbering a document by surprise. `Number headings in note` turns the mode on, `Remove heading numbers` turns it off.
 
@@ -182,20 +212,16 @@ Each command is one editor transaction, so a single <kbd>Ctrl</kbd>+<kbd>Z</kbd>
 
 ## What this plugin touches
 
-There are no network calls, no telemetry, and nothing loaded at runtime beyond what the host already provides. Two things are worth spelling out anyway.
+No network calls, no telemetry, and nothing loaded at runtime beyond what the host already provides. Two things are worth spelling out anyway.
 
-- **The clipboard, and only when you ask for it.** `Copy as clean text`, `Copy as formatted text` and `Copy as a real nested list` write to it. `Format pasted lists` reads what you just pasted, through the paste event itself. Nothing is read or written in the background, and nothing is written anywhere but the clipboard.
+- **The clipboard, and only when you ask for it.** `Copy as clean text`, `Copy as formatted text` and `Copy as a real nested list` write to it. `Format pasted lists` reads what you just pasted, through the paste event itself. Nothing is read or written in the background.
 - **Your notes, through the normal vault API.** Every command is one editor transaction, so one <kbd>Ctrl</kbd>+<kbd>Z</kbd> puts everything back. No file is touched outside the note you are in, except `Save the selection as a clean note`, which creates one new note that you named.
 
 ## Installation
 
-### From the community directory
+**From the community directory:** **Settings → Community plugins → Browse → Multilevel Number Indent**.
 
-**Settings → Community plugins → Browse → Multilevel Number Indent**.
-
-### Manually
-
-Copy `main.js`, `manifest.json` and `styles.css` into `<vault>/.obsidian/plugins/nested-outline-numbering/`, then enable the plugin in **Settings → Community plugins**.
+**Manually:** copy `main.js`, `manifest.json` and `styles.css` into `<vault>/.obsidian/plugins/nested-outline-numbering/`, then enable the plugin in **Settings → Community plugins**.
 
 ## Compatibility
 
