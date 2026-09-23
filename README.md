@@ -178,6 +178,13 @@ Changing a heading level or moving a section renumbers the note automatically, b
 
 Each command is one editor transaction, so a single <kbd>Ctrl</kbd>+<kbd>Z</kbd> puts everything back.
 
+## What this plugin touches
+
+There are no network calls, no telemetry, and nothing loaded at runtime beyond what the host already provides. Two things are worth spelling out anyway.
+
+- **The clipboard, and only when you ask for it.** `Copy as clean text`, `Copy as formatted text` and `Copy as a real nested list` write to it. `Format pasted lists` reads what you just pasted, through the paste event itself. Nothing is read or written in the background, and nothing is written anywhere but the clipboard.
+- **Your notes, through the normal vault API.** Every command is one editor transaction, so one <kbd>Ctrl</kbd>+<kbd>Z</kbd> puts everything back. No file is touched outside the note you are in, except `Save the selection as a clean note`, which creates one new note that you named.
+
 ## Installation
 
 ### From the community directory
