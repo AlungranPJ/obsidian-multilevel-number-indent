@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0
+
+- **Settings tab.** One number template per level, plus the indent width, with a live preview of the result. Placeholders render the counter (`1` arabic, `a`/`A` letters, `i`/`I` roman numerals) and every other character is literal, so the separators and the closing mark are yours to choose.
+- The shipped format is unchanged: levels 1 to 3 stay `1.` / `1.1.` / `1.1.1.` and levels 4 and deeper stay `1)` / `1.1)`. Set templates such as `1.1.1.1.` or `a)` to change it.
+- A number written with the shipped format is still recognised after you change the format, so a note is renumbered into the new shape instead of being abandoned.
+- Heading numbers follow the same templates with the closing period dropped.
+- A template with no placeholder is ignored and keeps the value that level had, so a half-typed row never shifts the levels below it.
+- Levels are never derived from the number text any more; a level always comes from the indentation, which is what lets any format parse.
+
 ## 1.1.0
 
 - Levels 4 and deeper now restart the count and close with a bracket: `1.` / `1.1.` / `1.1.1.` / `1)` / `1.1)`. The same rule applies to heading numbers (`#### 1) Point`).

@@ -5,6 +5,10 @@
  *   Level 1-3   1.  1.1.  1.1.1.
  *   Level 4+    1)  1.1)  1.1.1)     (the count restarts at level 4)
  *
+ * Those are the shipped defaults. Settings -> Nested Outline Numbering holds one
+ * template per level, so the shape is yours: placeholders render the counter
+ * (1 arabic, a/A letters, i/I roman) and every other character is literal.
+ *
  *   Tab            indent the item and its whole subtree by one level
  *   Shift + Tab    outdent the item and its subtree (at the top level: drop the number)
  *   Enter          next sibling at the same depth
@@ -21,49 +25,225 @@
 /* Obsidian's plugin loader evaluates this file as CommonJS, so require() is the
  * only way to reach the host modules. There is no bundler and no import syntax. */
 /* eslint-disable @typescript-eslint/no-require-imports -- require() is the only way to reach the host modules in a CommonJS Obsidian plugin */
-const { Plugin, MarkdownView, editorInfoField } = require("obsidian");
+const { Plugin, PluginSettingTab, Setting, MarkdownView, editorInfoField } = require("obsidian");
 const { Prec } = require("@codemirror/state");
 const { keymap, Decoration, ViewPlugin } = require("@codemirror/view");
 /* eslint-enable @typescript-eslint/no-require-imports -- the host modules are imported, nothing else below needs the exception */
 
 /* ================================ CORE ================================ */
 
-const INDENT_UNIT = "  ";
-/* Levels 1-3 carry the full path and end with a dot (`1.` / `1.1.` / `1.1.1.`).
- * From level 4 the number restarts and ends with a bracket (`1)` / `1.1)`), the
- * way formal outlines are written. */
-const DOT_LEVELS = 3;
-const NUMBER_RE = /^(\s*)(\d+(?:\.\d+)*)([.)])(\s+)(.*)$/;
+/* ---------------------------- configuration ---------------------------- */
 
-function indentColumns(s) {
+/* Written by the settings tab into data.json. `indent` is what gets prepended
+ * per level; `formats` holds one number template per level and the last one is
+ * reused for anything deeper. */
+const DEFAULT_SETTINGS = {
+	indent: "  ",
+	formats: ["1.", "1.1.", "1.1.1.", "1)", "1.1)", "1.1.1)"],
+};
+
+/* Inside a template every placeholder becomes the counter of the next path
+ * segment. How many placeholders a template carries decides how many trailing
+ * segments that level shows, which is how `1)` restarts the count at level 4.
+ * Every other character is literal: the separator or the closing mark. */
+const STYLES = {
+	1: (n) => String(n),
+	a: (n) => alpha(n).toLowerCase(),
+	A: (n) => alpha(n),
+	i: (n) => roman(n).toLowerCase(),
+	I: (n) => roman(n),
+};
+
+const STYLE_RE = {
+	1: "\\d+",
+	a: "[a-z]+",
+	A: "[A-Z]+",
+	i: "[ivxlcdm]+",
+	I: "[IVXLCDM]+",
+};
+
+/* The dotted shapes this plugin shipped with are always recognised, so a note
+ * written before the format was changed keeps being renumbered instead of being
+ * silently abandoned, and the `0. ` placeholder written by insert/enter parses. */
+const LEGACY_SHAPES = ["\\d+(?:\\.\\d+)*\\.", "\\d+(?:\\.\\d+)*\\)"];
+
+const PREVIEW_WORDS = [
+	"Introduction",
+	"Scope",
+	"Detail",
+	"Point",
+	"Sub-point",
+	"Deeper detail",
+	"Seventh level",
+	"Eighth level",
+];
+
+function alpha(n) {
+	let s = "";
+	let v = Math.max(1, Math.floor(n));
+	while (v > 0) {
+		const r = (v - 1) % 26;
+		s = String.fromCharCode(65 + r) + s;
+		v = Math.floor((v - 1) / 26);
+	}
+	return s;
+}
+
+const ROMAN = [
+	[1000, "M"], [900, "CM"], [500, "D"], [400, "CD"], [100, "C"], [90, "XC"],
+	[50, "L"], [40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
+];
+
+function roman(n) {
+	let s = "";
+	let v = Math.max(1, Math.floor(n));
+	for (const pair of ROMAN) {
+		while (v >= pair[0]) {
+			s += pair[1];
+			v -= pair[0];
+		}
+	}
+	return s;
+}
+
+function placeholderCount(template) {
 	let n = 0;
-	for (let i = 0; i < s.length; i++) n += s[i] === "	" ? 4 : 1;
+	for (const ch of template) if (STYLES[ch]) n++;
 	return n;
 }
 
-/**
- * `1` / `1.1` / `1.1.1` while `depth` is under DOT_LEVELS, then `1)` / `1.1)`
- * counted from level 4 again. `trailingDot` is off for headings, which carry no
- * closing dot.
- */
-function formatNumber(counter, depth, trailingDot) {
-	const local = depth < DOT_LEVELS ? counter.slice(0, depth + 1) : counter.slice(DOT_LEVELS, depth + 1);
-	const body = local.join(".");
-	if (depth < DOT_LEVELS) return trailingDot ? body + "." : body;
-	return body + ")";
+function escapeRe(s) {
+	return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Parses a numbered line, or returns null when the line is not one. */
+/** The template used at `depth`, reusing the last one for deeper levels. */
+function templateFor(formats, depth) {
+	return formats[Math.min(Math.max(0, depth), formats.length - 1)];
+}
+
+/** A heading carries no closing dot, so drop it from the outline template. */
+function headingTemplate(template) {
+	return template.endsWith(".") ? template.slice(0, -1) : template;
+}
+
+/**
+ * Keeps the position of every level: a template that carries no placeholder is
+ * replaced by the shipped default for that level rather than being dropped,
+ * which would silently shift every level below it.
+ */
+function normaliseFormats(formats) {
+	const src = Array.isArray(formats) ? formats : [];
+	const total = Math.max(src.length, DEFAULT_SETTINGS.formats.length);
+	const out = [];
+	for (let i = 0; i < total; i++) {
+		const raw = typeof src[i] === "string" ? src[i].trim() : "";
+		if (raw.length > 0 && placeholderCount(raw) > 0) out.push(raw);
+		else out.push(templateFor(DEFAULT_SETTINGS.formats, i));
+	}
+	return out;
+}
+
+function templateToRe(template) {
+	let out = "";
+	for (const ch of template) out += STYLES[ch] ? STYLE_RE[ch] : escapeRe(ch);
+	return out;
+}
+
+function buildNumberRe(formats) {
+	const alts = LEGACY_SHAPES.slice();
+	for (const template of formats) {
+		if (placeholderCount(template) > 0) alts.push(templateToRe(template));
+	}
+	/* Longest first: `1.1.` has to be tried before `1.` can swallow the line. */
+	alts.sort((x, y) => y.length - x.length);
+	return new RegExp("^(\\s*)((?:" + alts.join("|") + "))(\\s+)(.*)$");
+}
+
+/* Every core function reads the live values from here, which keeps the text
+ * logic free of the Obsidian API. The settings tab is the only writer. */
+let CONFIG = {
+	indent: DEFAULT_SETTINGS.indent,
+	formats: DEFAULT_SETTINGS.formats.slice(),
+	numberRe: null,
+};
+
+function getConfig() {
+	return { indent: CONFIG.indent, formats: CONFIG.formats.slice() };
+}
+
+function setConfig(partial) {
+	const src = partial || {};
+	const indent = typeof src.indent === "string" && /^[ \t]+$/.test(src.indent) ? src.indent : CONFIG.indent;
+	const formats = src.formats === undefined ? CONFIG.formats : normaliseFormats(src.formats);
+	CONFIG = { indent, formats, numberRe: buildNumberRe(formats) };
+	return getConfig();
+}
+
+setConfig({});
+
+function indentColumns(s) {
+	let n = 0;
+	for (let i = 0; i < s.length; i++) n += s[i] === "\t" ? 4 : 1;
+	return n;
+}
+
+/** Renders one template against the counter path, using its last segments. */
+function renderTemplate(template, counters, depth) {
+	const need = placeholderCount(template);
+	const start = Math.max(0, depth + 1 - need);
+	let out = "";
+	let taken = 0;
+	for (const ch of template) {
+		if (!STYLES[ch]) {
+			out += ch;
+			continue;
+		}
+		const value = counters[start + taken];
+		out += STYLES[ch](value === undefined ? 1 : value);
+		taken++;
+	}
+	return out;
+}
+
+/** The number a level shows, against an explicit template list. */
+function renderNumber(counters, depth, formats, trailingDot) {
+	const template = templateFor(formats, depth);
+	return renderTemplate(trailingDot ? template : headingTemplate(template), counters, depth);
+}
+
+/**
+ * The number the current settings give this level. `trailingDot` is off for
+ * headings, which carry no closing dot.
+ */
+function formatNumber(counter, depth, trailingDot) {
+	return renderNumber(counter, depth, CONFIG.formats, trailingDot);
+}
+
+/** Sample numbering for the settings preview, which works on draft values. */
+function previewLines(formats, indent, count) {
+	const total = Math.max(1, count || 6);
+	const counters = [];
+	const out = [];
+	for (let d = 0; d < total; d++) {
+		while (counters.length <= d) counters.push(1);
+		const word = PREVIEW_WORDS[d] || "Item " + (d + 1);
+		out.push(indent.repeat(d) + renderNumber(counters, d, formats, true) + " " + word);
+	}
+	return out;
+}
+
+/**
+ * Parses a numbered line, or returns null when the line is not one. The level
+ * of a line comes from its indentation, never from the number itself, so every
+ * format the settings allow is parsed the same way.
+ */
 function parseLine(line) {
-	const m = NUMBER_RE.exec(line);
+	const m = CONFIG.numberRe.exec(line);
 	if (!m) return null;
-	const segments = m[2].split(".").map(Number);
 	return {
 		indent: m[1],
-		number: m[2] + m[3],
-		content: m[5],
-		segments,
-		level: m[3] === ")" ? DOT_LEVELS + segments.length : segments.length,
+		number: m[2],
+		content: m[4],
 		columns: indentColumns(m[1]),
 	};
 }
@@ -166,7 +346,7 @@ function renumberRange(lines, from, to) {
 					counter[d] = (counter[d] || 0) + 1;
 				}
 				prev = d;
-				const next = baseIndent + INDENT_UNIT.repeat(d) + formatNumber(counter, d, true) + " " + items[n].p.content;
+				const next = baseIndent + CONFIG.indent.repeat(d) + formatNumber(counter, d, true) + " " + items[n].p.content;
 				if (lines[items[n].k] !== next) {
 					lines[items[n].k] = next;
 					changed = true;
@@ -179,7 +359,7 @@ function renumberRange(lines, from, to) {
 }
 
 function removeIndentUnit(line) {
-	if (line.startsWith(INDENT_UNIT)) return line.slice(INDENT_UNIT.length);
+	if (line.startsWith(CONFIG.indent)) return line.slice(CONFIG.indent.length);
 	if (line.startsWith("\t")) return line.slice(1);
 	const m = /^\s+/.exec(line);
 	return m ? line.slice(m[0].length) : line;
@@ -212,7 +392,7 @@ function indentItem(lines, l) {
 	const out = lines.slice();
 	for (let i = sub.start; i <= sub.end; i++) {
 		if (mask[i]) continue;
-		if (parseLine(out[i])) out[i] = INDENT_UNIT + out[i];
+		if (parseLine(out[i])) out[i] = CONFIG.indent + out[i];
 	}
 	renumberRange(out, Math.max(0, block.start - 1), Math.min(out.length - 1, sub.end + 1));
 	return out.join("\n") === lines.join("\n") ? null : { lines: out, caretLine: l, caretCh: null };
@@ -572,9 +752,23 @@ function offsetToPos(text, offset) {
 }
 
 const CORE = {
-	INDENT_UNIT,
-	DOT_LEVELS,
-	NUMBER_RE,
+	DEFAULT_SETTINGS,
+	STYLES,
+	STYLE_RE,
+	LEGACY_SHAPES,
+	alpha,
+	roman,
+	placeholderCount,
+	templateFor,
+	headingTemplate,
+	templateToRe,
+	buildNumberRe,
+	normaliseFormats,
+	renderTemplate,
+	renderNumber,
+	previewLines,
+	getConfig,
+	setConfig,
 	formatNumber,
 	parseLine,
 	fenceMask,
@@ -606,7 +800,9 @@ const CORE = {
 /* =============================== PLUGIN =============================== */
 
 class NestedOutlineNumbering extends Plugin {
-	onload() {
+	async onload() {
+		await this.loadSettings();
+
 		const handler = (ev) => this.handleKeydown(ev);
 		document.addEventListener("keydown", handler, true);
 		this.register(() => document.removeEventListener("keydown", handler, true));
@@ -650,6 +846,19 @@ class NestedOutlineNumbering extends Plugin {
 			name: "Remove heading numbers",
 			editorCallback: (editor) => this.runWholeNote(editor, removeHeadingNumbers),
 		});
+
+		this.addSettingTab(new NestedOutlineNumberingSettingTab(this.app, this));
+	}
+
+	async loadSettings() {
+		const data = (await this.loadData()) || {};
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
+		Object.assign(this.settings, setConfig(this.settings));
+	}
+
+	async saveSettings() {
+		Object.assign(this.settings, setConfig(this.settings));
+		await this.saveData(this.settings);
 	}
 
 	/**
@@ -788,6 +997,81 @@ class RangeSetBuilderLike {
 	}
 }
 
+/* ============================ SETTINGS TAB ============================ */
+
+class NestedOutlineNumberingSettingTab extends PluginSettingTab {
+	constructor(app, plugin) {
+		super(app, plugin);
+		this.plugin = plugin;
+		this.previewEl = null;
+	}
+
+	display() {
+		const { containerEl } = this;
+		containerEl.empty();
+
+		new Setting(containerEl)
+			.setName("Indent per level")
+			.setDesc("Added in front of an item every time it goes one level deeper. A tab counts as four columns.")
+			.addDropdown((drop) =>
+				drop
+					.addOption("  ", "Two spaces")
+					.addOption("    ", "Four spaces")
+					.addOption("\t", "One tab")
+					.setValue(this.plugin.settings.indent)
+					.onChange(async (value) => {
+						this.plugin.settings.indent = value;
+						await this.plugin.saveSettings();
+						this.renderPreview();
+					})
+			);
+
+		new Setting(containerEl).setName("Number format").setHeading();
+		containerEl.createEl("p", {
+			cls: "setting-item-description",
+			text:
+				"One template per level. A placeholder becomes the counter of a path segment: 1 arabic, a/A letters, i/I roman numerals. " +
+				"Every other character is literal, so it sets the separators and the closing mark. How many placeholders a row carries " +
+				"decides how many trailing segments that level shows, which is how the default restarts the count at level 4. " +
+				"The last row is reused for every deeper level.",
+		});
+
+		const rows = Math.max(DEFAULT_SETTINGS.formats.length, this.plugin.settings.formats.length);
+		for (let index = 0; index < rows; index++) {
+			const i = index;
+			const baseDesc = i >= DEFAULT_SETTINGS.formats.length ? "Reused for every deeper level." : "";
+			const setting = new Setting(containerEl)
+				.setName("Level " + (i + 1))
+				.setDesc(baseDesc)
+				.addText((text) =>
+					text
+						.setPlaceholder(templateFor(DEFAULT_SETTINGS.formats, i))
+						.setValue(this.plugin.settings.formats[i] || "")
+						.onChange(async (value) => {
+							const next = this.plugin.settings.formats.slice();
+							next[i] = value;
+							this.plugin.settings.formats = next;
+							await this.plugin.saveSettings();
+							const ok = placeholderCount(value.trim()) > 0;
+							setting.setDesc(ok ? baseDesc : "No placeholder here, so the previous value is kept. Try 1, a or i.");
+							this.renderPreview();
+						})
+				);
+		}
+
+		new Setting(containerEl).setName("Preview").setHeading();
+		this.previewEl = containerEl.createEl("pre", { cls: "nested-outline-preview" });
+		this.renderPreview();
+	}
+
+	renderPreview() {
+		if (!this.previewEl) return;
+		const settings = this.plugin.settings;
+		this.previewEl.textContent = previewLines(normaliseFormats(settings.formats), settings.indent, 6).join("\n");
+	}
+}
+
 module.exports = NestedOutlineNumbering;
 module.exports.default = NestedOutlineNumbering;
 module.exports.__core = CORE;
+module.exports.__settingsTab = NestedOutlineNumberingSettingTab;

@@ -6,13 +6,16 @@
  *
  * Obsidian reads those offsets from CSS variables, so resetting the variables
  * on the line is enough. Nothing has to fight the theme for precedence.
+ *
+ * tab-size matches how the core counts a tab when it works out a level, so a
+ * tab indent renders the same width the numbering assumes.
  */
 .markdown-source-view.mod-cm6 .cm-line.nested-outline-numbering-line {
 	--list-padding-inline-start: 0px;
 	--list-marker-space: 0px;
 	--list-indent: 0px;
 	--list-indent-editing: 0px;
-	tab-size: 2;
+	tab-size: 4;
 }
 
 /* Lines with four or more leading spaces are parsed as indented code blocks,
@@ -28,4 +31,19 @@
 .cm-s-obsidian div.cm-line.nested-outline-numbering-line.HyperMD-codeblock-bg {
 	background-color: transparent;
 	border-width: 0;
+}
+
+/* Settings tab: live preview of the numbering the current templates produce. */
+.nested-outline-preview {
+	margin: 0;
+	padding: var(--size-4-3);
+	overflow-x: auto;
+	white-space: pre;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background-color: var(--background-secondary);
+	color: var(--text-normal);
+	font-family: var(--font-monospace);
+	font-size: var(--font-smaller);
+	line-height: 1.6;
 }

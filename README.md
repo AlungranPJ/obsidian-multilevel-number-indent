@@ -40,13 +40,7 @@ Every key is scoped. A line the plugin does not recognise is never touched, so <
 
 ## The plain-text format
 
-```
-^[ \t]*(\d+(?:\.\d+)*)[.)][ \t]+
-```
-
-- **Levels 1 to 3** carry the full path and end with a period: `1.` `1.1.` `1.1.1.`
-- **Level 4 and deeper** restart the count and end with a bracket: `1)` `1.1)`
-- Two spaces of indentation per level, so the content column advances by exactly four characters each time.
+Out of the box the numbering looks like this:
 
 ```text
 1. Introduction
@@ -58,15 +52,41 @@ Every key is scoped. A line the plugin does not recognise is never touched, so <
 2. Summary
 ```
 
+- **Levels 1 to 3** carry the full path and end with a period: `1.` `1.1.` `1.1.1.`
+- **Level 4 and deeper** restart the count and end with a bracket: `1)` `1.1)`
+- Two spaces of indentation per level, so the content column advances by exactly four characters each time.
+
 The level is read from the indentation, not from the number, so indenting a line always renumbers it into the right shape — `1.1.1.` becomes `1)` when it drops to level 4, and `1)` walks back to `1.1.2.` when it comes up again.
 
 After <kbd>Tab</kbd> or <kbd>Shift</kbd>+<kbd>Tab</kbd> the caret keeps its place inside the content, never inside the number: a bare `2. ` becomes `  1.1. |`, not `  1.1|. `.
 
 `1.1.` is not a Markdown list marker, which is exactly why the numbers travel with the text. Only a root `1.` is a real list item, and `styles.css` neutralises Obsidian's list offset for the recognised lines so every level lines up.
 
+## Settings
+
+**Settings → Nested Outline Numbering** holds one number template per level plus the indent width, and previews the result live as you type.
+
+| Placeholder | Renders |
+|---|---|
+| `1` | `1` `2` `3` … |
+| `a` / `A` | `a` `b` … / `A` `B` … |
+| `i` / `I` | `i` `ii` `iii` … / `I` `II` `III` … |
+
+Everything else in a template is literal, so it sets the separators and the closing mark. How many placeholders a row carries decides how many trailing segments that level shows, which is how the defaults restart the count at level 4:
+
+```text
+1.1.1.     ->  1.1.1.         full path, closed with a period
+1)         ->  1)             one segment, so the count restarts
+1.1)       ->  1.1)           two segments
+a)         ->  a) b) c)       letters
+I.         ->  I. II. III.    roman numerals
+```
+
+A row without a placeholder is ignored and keeps the value it had, and the last row is reused for every deeper level. Numbers already written with the shipped defaults are still recognised after you change the format, so nothing gets orphaned — the next <kbd>Tab</kbd> rewrites them into the new shape.
+
 ## Heading numbering
 
-Headings use the same counters without a trailing period on levels 1 to 3: `# 1 Introduction`, `## 1.1 Scope`, `### 1.1.1 Detail`. From level 4 they follow the plain-text rule and end with a bracket: `#### 1) Point`, `##### 1.1) Detail`.
+Headings use the same templates with the closing period dropped, so levels 1 to 3 read `# 1 Introduction`, `## 1.1 Scope`, `### 1.1.1 Detail`. From level 4 they follow the plain-text rule and end with a bracket: `#### 1) Point`, `##### 1.1) Detail`.
 
 Changing a heading level or moving a section renumbers the note automatically **once the note is in numbered mode**, that is, once at least one heading carries a number. A note with no numbers is left alone, so <kbd>Tab</kbd> never starts numbering a document by surprise. Turn the mode on with `Number headings in note` and off with `Remove heading numbers`.
 
@@ -113,7 +133,7 @@ The file is split into two parts:
 node test/core.test.js
 ```
 
-The test file stubs `require("obsidian")` and `require("@codemirror/*")` so `main.js` can be loaded in plain Node, then runs 112 assertions over the core: numbering, subtree moves, caret placement, code-fence handling, heading counters and round-trips. The first block also checks the shape Obsidian's loader needs (`module.exports`, `.default`, `prototype.onload`), so a broken export cannot pass the suite.
+The test file stubs `require("obsidian")` and `require("@codemirror/*")` so `main.js` can be loaded in plain Node, then runs 160 assertions over the core: numbering, subtree moves, caret placement, code-fence handling, heading counters, the number templates and round-trips. It also builds the settings tab against small doubles for `Setting`, `PluginSettingTab` and the container element, and checks the rows, the preview and the validation. The first block checks the shape Obsidian's loader needs (`module.exports`, `.default`, `prototype.onload`), so a broken export cannot pass the suite.
 
 There is no compilation step. `npm run build` runs that suite, so the build-verification check confirms the committed `main.js` behaves as documented.
 

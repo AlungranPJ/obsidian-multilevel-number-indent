@@ -9,8 +9,97 @@
 const Module = require("module");
 const path = require("path");
 
+/* Small doubles for the Obsidian UI surface, so the settings tab can be built
+ * and inspected in Node. Only the methods the tab actually calls are here. */
+class FakeEl {
+	constructor(tag, o) {
+		const options = o || {};
+		this.tag = tag;
+		this.attrs = Object.assign({}, options);
+		this.children = [];
+		this.textContent = options.text || "";
+	}
+	empty() {
+		this.children.length = 0;
+	}
+	createEl(tag, o) {
+		const el = new FakeEl(tag, o);
+		this.children.push(el);
+		return el;
+	}
+	createDiv(o) {
+		return this.createEl("div", o);
+	}
+}
+
+class FakeComponent {
+	setValue(value) {
+		this.value = value;
+		return this;
+	}
+	setPlaceholder(placeholder) {
+		this.placeholder = placeholder;
+		return this;
+	}
+	addOption(value, label) {
+		if (!this.options) this.options = {};
+		this.options[value] = label;
+		return this;
+	}
+	onChange(fn) {
+		this.change = fn;
+		return this;
+	}
+}
+
+class FakeSetting {
+	constructor(container) {
+		this.container = container;
+		this.name = null;
+		this.desc = "";
+		this.isHeading = false;
+		this.kind = null;
+		this.component = null;
+		container.children.push(this);
+	}
+	setName(name) {
+		this.name = name;
+		return this;
+	}
+	setDesc(desc) {
+		this.desc = desc;
+		return this;
+	}
+	setHeading() {
+		this.isHeading = true;
+		return this;
+	}
+	addDropdown(cb) {
+		return this.add("dropdown", cb);
+	}
+	addText(cb) {
+		return this.add("text", cb);
+	}
+	add(kind, cb) {
+		this.kind = kind;
+		this.component = new FakeComponent();
+		cb(this.component);
+		return this;
+	}
+}
+
+class FakePluginSettingTab {
+	constructor(app, plugin) {
+		this.app = app;
+		this.plugin = plugin;
+		this.containerEl = new FakeEl("div");
+	}
+}
+
 const stub = {
 	Plugin: class {},
+	PluginSettingTab: FakePluginSettingTab,
+	Setting: FakeSetting,
 	MarkdownView: class {},
 	editorInfoField: {},
 	Prec: { highest: (x) => x, high: (x) => x },
@@ -78,23 +167,20 @@ check("root item", core.parseLine("1. alpha"), {
 	indent: "",
 	number: "1.",
 	content: "alpha",
-	segments: [1],
-	level: 1,
 	columns: 0,
 });
 check("nested item", core.parseLine("  1.2. gamma").columns, 2);
-check("deep item", core.parseLine("    1.2.3.4. x").segments, [1, 2, 3, 4]);
-check("level 3", core.parseLine("    1.2.3. x").level, 3);
+check("deep item", core.parseLine("    1.2.3.4. x").number, "1.2.3.4.");
+check("level 3 columns", core.parseLine("    1.2.3. x").columns, 4);
 check("level 4 restarts with a bracket", core.parseLine("      1) x"), {
 	indent: "      ",
 	number: "1)",
 	content: "x",
-	segments: [1],
-	level: 4,
 	columns: 6,
 });
-check("level 5 keeps the local path", core.parseLine("        1.1) x").level, 5);
-check("a bracket number is owned even at the margin", core.parseLine("1) x").level, 4);
+check("level 5 keeps the local path", core.parseLine("        1.1) x").number, "1.1)");
+check("a bracket number is owned even at the margin", core.parseLine("1) x").number, "1)");
+check("the level comes from the indent, not the number", core.parseLine("      1.1.9. x").columns, 6);
 check("a bracket without a space is ignored", core.parseLine("1)x"), null);
 check("no trailing dot is ignored", core.parseLine("1.1 beta"), null);
 check("heading is ignored", core.parseLine("## beta"), null);
@@ -419,11 +505,174 @@ check("replace in the middle", core.minimalChange("1. a\n2. b", "1. a\n3. b"), {
 check("no change", core.minimalChange("same", "same"), { from: 4, to: 4, insert: "" });
 check("offsetToPos", core.offsetToPos("ab\ncd", 4), { line: 1, ch: 1 });
 
+/* ---------------------------- number formats ---------------------------- */
+
+console.log("placeholder styles");
+check("placholder count", core.placeholderCount("1.1.1."), 3);
+check("placeholder count ignores literals", core.placeholderCount("1)"), 1);
+check("letters start at A", core.alpha(1), "A");
+check("letters roll over", core.alpha(27), "AA");
+check("letters keep rolling", core.alpha(28), "AB");
+check("roman", core.roman(1990), "MCMXC");
+check("arabic style", core.renderTemplate("1", [7], 0), "7");
+check("lower letters style", core.renderTemplate("a)", [2], 0), "b)");
+check("upper letters style", core.renderTemplate("A)", [27], 0), "AA)");
+check("lower roman style", core.renderTemplate("i.", [4], 0), "iv.");
+check("upper roman style", core.renderTemplate("I.", [4], 0), "IV.");
+check("literal separators survive", core.renderTemplate("1-1-", [1, 2], 1), "1-2-");
+check("a template without a placeholder renders its literals", core.renderTemplate("--", [1], 0), "--");
+check("a heading drops the closing dot", core.headingTemplate("1.1."), "1.1");
+check("a heading keeps a closing bracket", core.headingTemplate("1.1)"), "1.1)");
+check("templateFor reuses the last level", core.templateFor(["1.", "1.1."], 9), "1.1.");
+
+console.log("normaliseFormats / setConfig");
+check("the shipped defaults", core.getConfig().formats, ["1.", "1.1.", "1.1.1.", "1)", "1.1)", "1.1.1)"]);
+check("a blank row takes the default for its level", core.normaliseFormats(["1.", "", "1.1.1."]), [
+	"1.",
+	"1.1.",
+	"1.1.1.",
+	"1)",
+	"1.1)",
+	"1.1.1)",
+]);
+check("a row without a placeholder is replaced, never dropped", core.normaliseFormats(["a.", "..."]), [
+	"a.",
+	"1.1.",
+	"1.1.1.",
+	"1)",
+	"1.1)",
+	"1.1.1)",
+]);
+check("a non-whitespace indent is refused", core.setConfig({ indent: "x" }).indent, "  ");
+check("a tab indent is accepted", core.setConfig({ indent: "\t" }).indent, "\t");
+core.setConfig({ indent: "  " });
+
+console.log("a custom format drives the numbering");
+core.setConfig({ formats: ["1.", "1.1.", "1.1.1.", "1.1.1.1.", "1.1.1.1.1.", "1.1.1.1.1.1."] });
+const allDotted = ["9. a", "  9.9. b", "    9.9.9. c", "      9.9.9.9. d", "        9.9.9.9.9. e"];
+core.renumberRange(allDotted, 0, allDotted.length - 1);
+check("a deep level keeps the dotted shape when told to", allDotted, [
+	"1. a",
+	"  1.1. b",
+	"    1.1.1. c",
+	"      1.1.1.1. d",
+	"        1.1.1.1.1. e",
+]);
+
+core.setConfig({ formats: ["1)", "1.1)", "1.1.1)", "1.1.1.1)", "1.1.1.1.1)"] });
+const allBracket = ["1. a", "  1.1. b", "    1.1.1. c", "      1.1.1.1. d", "        1.1.1.1.1. e"];
+core.renumberRange(allBracket, 0, allBracket.length - 1);
+check("an all-bracket format", allBracket, [
+	"1) a",
+	"  1.1) b",
+	"    1.1.1) c",
+	"      1.1.1.1) d",
+	"        1.1.1.1.1) e",
+]);
+
+core.setConfig({ formats: ["a.", "a.a.", "a.a.a."] });
+const lettered = ["5. a", "  5.5. b", "    5.5.5. c"];
+core.renumberRange(lettered, 0, lettered.length - 1);
+check("letters", lettered, ["a. a", "  a.a. b", "    a.a.a. c"]);
+
+core.setConfig({ formats: ["I.", "I.I.", "I.I.I.", "I.I.I.I."] });
+const romans = ["5. a", "  5.5. b", "    5.5.5. c", "      5.5.5.5. d"];
+core.renumberRange(romans, 0, romans.length - 1);
+check("roman numerals", romans, ["I. a", "  I.I. b", "    I.I.I. c", "      I.I.I.I. d"]);
+
+console.log("a custom indent");
+core.setConfig({ indent: "    ", formats: core.DEFAULT_SETTINGS.formats });
+check("indenting uses the configured unit", lines(core.indentItem(["1. a", "  1.1. b", "  1.2. c"], 2)), [
+	"1. a",
+	"    1.1. b",
+	"        1.1.1. c",
+]);
+core.setConfig({ indent: "  " });
+
+console.log("recognition survives a format change");
+core.setConfig({ formats: ["a.", "a.a."] });
+check("the configured format is owned", core.parseLine("b. text") !== null, true);
+check("a dotted number from before the change is still owned", core.parseLine("1.1. legacy") !== null, true);
+core.setConfig({ indent: "  ", formats: core.DEFAULT_SETTINGS.formats });
+check("a letter number is not owned while the format is dotted", core.parseLine("b. text"), null);
+
+console.log("previewLines");
+check("the preview spells out the shipped defaults", core.previewLines(core.DEFAULT_SETTINGS.formats, "  ", 6), [
+	"1. Introduction",
+	"  1.1. Scope",
+	"    1.1.1. Detail",
+	"      1) Point",
+	"        1.1) Sub-point",
+	"          1.1.1) Deeper detail",
+]);
+check("the preview follows a custom indent", core.previewLines(["1."], "\t", 2), ["1. Introduction", "\t1. Scope"]);
+check("the settings are back to the defaults", core.getConfig().formats, core.DEFAULT_SETTINGS.formats);
+
+/* ---------------------------- settings tab ---------------------------- */
+
+/* The tab is regular code, so it can be built against the doubles above and
+ * inspected. That is the only way to check it without driving the app. */
+const tabWork = (async () => {
+	console.log("the settings tab builds the expected rows");
+
+	const DEFAULTS = core.DEFAULT_SETTINGS;
+	const plugin = {
+		settings: { indent: DEFAULTS.indent, formats: DEFAULTS.formats.slice() },
+		saves: 0,
+		async saveSettings() {
+			this.saves += 1;
+			Object.assign(this.settings, core.setConfig(this.settings));
+		},
+	};
+	const tab = new entry.__settingsTab({}, plugin);
+	tab.display();
+
+	const children = tab.containerEl.children;
+	const settings = children.filter((c) => c instanceof FakeSetting);
+	const rows = settings.filter((s) => s.kind === "text");
+	const dropdown = settings.find((s) => s.kind === "dropdown");
+	const headings = settings.filter((s) => s.isHeading).map((s) => s.name);
+	const preview = children.find((c) => c.tag === "pre");
+
+	check("headings go through setHeading, not raw html", headings, ["Number format", "Preview"]);
+	check("the indent dropdown offers three widths", Object.keys(dropdown.component.options).length, 3);
+	check("the indent dropdown shows the current value", dropdown.component.value, DEFAULTS.indent);
+	check("one text row per level", rows.length, DEFAULTS.formats.length);
+	check("each row starts at the current template", rows.map((r) => r.component.value), DEFAULTS.formats);
+	check("each row hints the shipped template", rows.map((r) => r.component.placeholder), DEFAULTS.formats);
+	check("the preview element exists", preview !== undefined, true);
+	check("the preview renders the current settings", preview.textContent, core.previewLines(DEFAULTS.formats, DEFAULTS.indent, 6).join("\n"));
+
+	console.log("editing a template updates the preview");
+	await rows[0].component.change("a)");
+	check("the change is saved", plugin.saves > 0, true);
+	check("the new template is kept", plugin.settings.formats[0], "a)");
+	check("the preview follows the change", preview.textContent.split("\n")[0], "a) Introduction");
+	check("a valid row keeps an empty description", rows[0].desc, "");
+
+	console.log("an invalid row is refused without shifting the levels");
+	await rows[1].component.change("...");
+	check("a row without a placeholder keeps the previous value", plugin.settings.formats[1], DEFAULTS.formats[1]);
+	check("the row says why", rows[1].desc.includes("No placeholder"), true);
+	check("the preview falls back to the default for that level", preview.textContent.split("\n")[1], "  1.1. Scope");
+
+	/* leave the core exactly as it was found */
+	core.setConfig({ indent: DEFAULTS.indent, formats: DEFAULTS.formats });
+})();
+
 /* -------------------------------- done -------------------------------- */
 
-console.log("");
-console.log(passed + " passed, " + failures.length + " failed");
-if (failures.length > 0) {
-	console.log("failed: " + failures.join(", "));
-	process.exit(1);
+function summary() {
+	console.log("");
+	console.log(passed + " passed, " + failures.length + " failed");
+	if (failures.length > 0) {
+		console.log("failed: " + failures.join(", "));
+		process.exit(1);
+	}
 }
+
+tabWork.then(summary, (err) => {
+	console.log("");
+	console.log("the settings tab threw: " + (err && err.stack ? err.stack : err));
+	process.exit(1);
+});
