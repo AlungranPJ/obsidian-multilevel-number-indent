@@ -58,6 +58,19 @@ const doc = [
 
 const lines = (r) => (r === null ? null : r.lines);
 
+/* --------------------------- module shape --------------------------- */
+
+/* Obsidian's loader reads the plugin class off module.exports. Nothing else in
+ * this file would notice if that changed, so check it here too. */
+console.log("module exports (how Obsidian's loader reads the file)");
+const entry = require(path.join(__dirname, "..", "main.js"));
+check("main.js exports a constructor", typeof entry, "function");
+check("module.exports.default is set too", typeof entry.default, "function");
+check("default is the same class", entry.default === entry, true);
+check("the class can be loaded by the host", typeof entry.prototype.onload, "function");
+check("__core is exposed for these tests", typeof entry.__core, "object");
+check("__core is the same object on both require paths", entry.__core === core, true);
+
 /* ------------------------------ parse ------------------------------ */
 
 console.log("parseLine");

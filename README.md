@@ -111,7 +111,7 @@ The file is split into two parts:
 node test/core.test.js
 ```
 
-The test file stubs `require("obsidian")` and `require("@codemirror/*")` so `main.js` can be loaded in plain Node, then runs 106 assertions over the core: numbering, subtree moves, caret placement, code-fence handling, heading counters and round-trips.
+The test file stubs `require("obsidian")` and `require("@codemirror/*")` so `main.js` can be loaded in plain Node, then runs 112 assertions over the core: numbering, subtree moves, caret placement, code-fence handling, heading counters and round-trips. The first block also checks the shape Obsidian's loader needs (`module.exports`, `.default`, `prototype.onload`), so a broken export cannot pass the suite.
 
 There is no compilation step. `npm run build` runs that suite, so the build-verification check confirms the committed `main.js` behaves as documented.
 
