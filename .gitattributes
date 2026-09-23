@@ -1,0 +1,10 @@
+# Keep the working tree byte-identical to what is committed and released.
+#
+# With core.autocrlf=true (the Git for Windows default) a fresh clone would
+# otherwise check these files out as CRLF, and the release assets would no longer
+# match the source they were built from. Pinning eol=lf makes the checkout
+# deterministic on every platform.
+* text=auto eol=lf
+
+# Generated images: never touch them.
+*.png binary
