@@ -2,6 +2,8 @@
 
 Hierarchical numbering for Obsidian outlines, written into the note as real text.
 
+![Nested Outline Numbering in Obsidian: 1. / 1.1. / 1.2.1. down to 1) and 2.1)](assets/demo.png)
+
 Press <kbd>Tab</kbd> and an item goes one level deeper, carrying its whole subtree with it:
 
 ```text
