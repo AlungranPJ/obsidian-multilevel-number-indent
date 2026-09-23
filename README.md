@@ -76,7 +76,7 @@ The level is read from the indentation, never from the number, so indenting a li
 
 `1.1.` is deliberately not a Markdown list marker, which is exactly why the numbers travel with the text. Only a root `1.` is a real list item, and `styles.css` neutralises Obsidian's list offset for the recognised lines so every level sits on the same grid.
 
-![The same outline rendered in four number formats](assets/example.svg)
+![The same outline rendered in six number formats](assets/example.svg)
 
 ### Placeholders
 
