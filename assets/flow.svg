@@ -19,7 +19,8 @@
   <g font-family="Consolas, 'Noto Sans Mono', 'Leelawadee UI', Tahoma, ui-monospace, monospace">
     <text x="72" y="178" font-size="16" fill="#f97316">Pasted from Word</text>
     <rect x="72" y="190" width="52" height="3" rx="1.5" fill="#f97316" opacity="0.45"/>
-    <text x="72.0" y="236" fill="#71717a">Introduction</text>
+    <text x="72.0" y="236" fill="None">-</text>
+    <text x="90.7" y="236" fill="#71717a">Introduction</text>
     <text x="90.7" y="270" fill="#f97316">◦</text>
     <text x="109.4" y="270" fill="#71717a">Scope</text>
     <text x="109.4" y="304" fill="#f97316">◦</text>

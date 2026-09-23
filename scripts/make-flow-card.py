@@ -37,7 +37,7 @@ COLUMNS = [
         "Pasted from Word",
         WORD_FILL,
         [
-            (1, "", "Introduction", None),
+            (1, "-", "Introduction", None),
             (2, "\u25e6", "Scope", ORANGE),
             (3, "\u25e6", "Detail", ORANGE),
             (4, "\u2022", "First point", ORANGE),

@@ -140,6 +140,8 @@ The **Preset JSON** box is how the saved ones travel: **Export** copies them to 
 
 The numbering is only half the job. What matters is the text that comes out.
 
+![The same text, three states: pasted from Word, numbered in your note, out as clean text](assets/flow.svg)
+
 | Command | What it does |
 |---|---|
 | `Normalize the outline` | Puts a drifted note back into shape and renumbers it from the real depth. |
