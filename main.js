@@ -1,6 +1,9 @@
 /*
  * Nested Outline Numbering
- * Hierarchical plain-text numbering (1. / 1.1. / 1.1.1.) for Obsidian.
+ * Hierarchical plain-text numbering for Obsidian.
+ *
+ *   Level 1-3   1.  1.1.  1.1.1.
+ *   Level 4+    1)  1.1)  1.1.1)     (the count restarts at level 4)
  *
  *   Tab            indent the item and its whole subtree by one level
  *   Shift + Tab    outdent the item and its subtree (at the top level: drop the number)
@@ -26,23 +29,41 @@ const { keymap, Decoration, ViewPlugin } = require("@codemirror/view");
 /* ================================ CORE ================================ */
 
 const INDENT_UNIT = "  ";
-const NUMBER_RE = /^(\s*)(\d+(?:\.\d+)*\.)(\s+)(.*)$/;
+/* Levels 1-3 carry the full path and end with a dot (`1.` / `1.1.` / `1.1.1.`).
+ * From level 4 the number restarts and ends with a bracket (`1)` / `1.1)`), the
+ * way formal outlines are written. */
+const DOT_LEVELS = 3;
+const NUMBER_RE = /^(\s*)(\d+(?:\.\d+)*)([.)])(\s+)(.*)$/;
 
 function indentColumns(s) {
 	let n = 0;
-	for (let i = 0; i < s.length; i++) n += s[i] === "\t" ? 4 : 1;
+	for (let i = 0; i < s.length; i++) n += s[i] === "	" ? 4 : 1;
 	return n;
+}
+
+/**
+ * `1` / `1.1` / `1.1.1` while `depth` is under DOT_LEVELS, then `1)` / `1.1)`
+ * counted from level 4 again. `trailingDot` is off for headings, which carry no
+ * closing dot.
+ */
+function formatNumber(counter, depth, trailingDot) {
+	const local = depth < DOT_LEVELS ? counter.slice(0, depth + 1) : counter.slice(DOT_LEVELS, depth + 1);
+	const body = local.join(".");
+	if (depth < DOT_LEVELS) return trailingDot ? body + "." : body;
+	return body + ")";
 }
 
 /** Parses a numbered line, or returns null when the line is not one. */
 function parseLine(line) {
 	const m = NUMBER_RE.exec(line);
 	if (!m) return null;
+	const segments = m[2].split(".").map(Number);
 	return {
 		indent: m[1],
-		number: m[2],
-		content: m[4],
-		segments: m[2].slice(0, -1).split(".").map(Number),
+		number: m[2] + m[3],
+		content: m[5],
+		segments,
+		level: m[3] === ")" ? DOT_LEVELS + segments.length : segments.length,
 		columns: indentColumns(m[1]),
 	};
 }
@@ -145,7 +166,7 @@ function renumberRange(lines, from, to) {
 					counter[d] = (counter[d] || 0) + 1;
 				}
 				prev = d;
-				const next = baseIndent + INDENT_UNIT.repeat(d) + counter.join(".") + ". " + items[n].p.content;
+				const next = baseIndent + INDENT_UNIT.repeat(d) + formatNumber(counter, d, true) + " " + items[n].p.content;
 				if (lines[items[n].k] !== next) {
 					lines[items[n].k] = next;
 					changed = true;
@@ -326,7 +347,7 @@ function removeNumbering(lines, from, to) {
 /* ------------------------------ headings ------------------------------ */
 
 const HEADING_RE = /^(#{1,6})\s+(.*)$/;
-const HEADING_NUMBER_RE = /^(\d+(?:\.\d+)*)\.?\s+/;
+const HEADING_NUMBER_RE = /^(\d+(?:\.\d+)*[.)]?)\s+/;
 
 /** Parses an ATX heading line, or returns null when the line is not one. */
 function parseHeading(line) {
@@ -370,7 +391,7 @@ function headingNumbers(lines) {
 			counters.length = lvl + 1;
 			counters[lvl] += 1;
 		}
-		result.push({ line: i, level: h.level, number: counters.join(".") });
+		result.push({ line: i, level: h.level, number: formatNumber(counters, lvl, false) });
 	}
 	return result;
 }
@@ -510,6 +531,32 @@ function minimalChange(a, b) {
 	return { from: start, to: endA, insert: b.slice(start, endB) };
 }
 
+/**
+ * Length of the `indent + number + space` prefix that sits in front of the
+ * content, for numbered lines and for numbered headings alike. Null when the
+ * line carries no number at all.
+ */
+function prefixLength(line) {
+	const p = parseLine(line);
+	if (p) return line.length - p.content.length;
+	const h = parseHeading(line);
+	if (!h) return null;
+	const m = HEADING_NUMBER_RE.exec(h.text);
+	return line.length - h.text.length + (m ? m[0].length : 0);
+}
+
+/**
+ * Where the caret goes once a line has been renumbered: the same spot inside
+ * the content. Carrying the raw offset over instead would drop it in the middle
+ * of the new number whenever the indent or the number changes length.
+ */
+function caretAfter(oldLine, newLine, ch) {
+	const was = prefixLength(oldLine);
+	const now = prefixLength(newLine);
+	if (was === null || now === null) return ch;
+	return now + Math.max(0, ch - was);
+}
+
 function offsetToPos(text, offset) {
 	let line = 0;
 	let ch = 0;
@@ -526,7 +573,9 @@ function offsetToPos(text, offset) {
 
 const CORE = {
 	INDENT_UNIT,
+	DOT_LEVELS,
 	NUMBER_RE,
+	formatNumber,
 	parseLine,
 	fenceMask,
 	findBlock,
@@ -549,6 +598,8 @@ const CORE = {
 	moveHeading,
 	applyAction,
 	minimalChange,
+	prefixLength,
+	caretAfter,
 	offsetToPos,
 };
 
@@ -636,7 +687,8 @@ class NestedOutlineNumbering extends Plugin {
 	runAction(editor, action) {
 		const text = editor.getValue();
 		const cursor = editor.getCursor();
-		const result = applyAction(text.split("\n"), cursor.line, cursor.ch, action);
+		const before = text.split("\n");
+		const result = applyAction(before, cursor.line, cursor.ch, action);
 		if (!result) return false;
 		const next = result.lines.join("\n");
 		if (next === text) return false;
@@ -644,11 +696,7 @@ class NestedOutlineNumbering extends Plugin {
 		const caretLine = result.caretLine === null ? cursor.line : result.caretLine;
 		const lineText = result.lines[caretLine] || "";
 		let caretCh = result.caretCh;
-		if (caretCh === null) {
-			caretCh = cursor.ch;
-			if (action === "indent") caretCh += INDENT_UNIT.length;
-			else if (action === "outdent") caretCh = Math.max(0, caretCh - INDENT_UNIT.length);
-		}
+		if (caretCh === null) caretCh = caretAfter(before[cursor.line] || "", lineText, cursor.ch);
 		caretCh = Math.min(caretCh, lineText.length);
 		editor.transaction({
 			changes: [{ from: offsetToPos(text, diff.from), to: offsetToPos(text, diff.to), text: diff.insert }],

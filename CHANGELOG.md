@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0
+
+- Levels 4 and deeper now restart the count and close with a bracket: `1.` / `1.1.` / `1.1.1.` / `1)` / `1.1)`. The same rule applies to heading numbers (`#### 1) Point`).
+- Fixed the caret jumping inside the number after <kbd>Tab</kbd> and <kbd>Shift</kbd>+<kbd>Tab</kbd>. A bare `2. ` used to become `  1.1|. `; it now becomes `  1.1. |`. The caret keeps its offset inside the content instead.
+
 ## 1.0.1
 
 Changes made in response to the community directory review.

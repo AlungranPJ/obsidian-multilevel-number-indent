@@ -66,10 +66,23 @@ check("root item", core.parseLine("1. alpha"), {
 	number: "1.",
 	content: "alpha",
 	segments: [1],
+	level: 1,
 	columns: 0,
 });
 check("nested item", core.parseLine("  1.2. gamma").columns, 2);
 check("deep item", core.parseLine("    1.2.3.4. x").segments, [1, 2, 3, 4]);
+check("level 3", core.parseLine("    1.2.3. x").level, 3);
+check("level 4 restarts with a bracket", core.parseLine("      1) x"), {
+	indent: "      ",
+	number: "1)",
+	content: "x",
+	segments: [1],
+	level: 4,
+	columns: 6,
+});
+check("level 5 keeps the local path", core.parseLine("        1.1) x").level, 5);
+check("a bracket number is owned even at the margin", core.parseLine("1) x").level, 4);
+check("a bracket without a space is ignored", core.parseLine("1)x"), null);
 check("no trailing dot is ignored", core.parseLine("1.1 beta"), null);
 check("heading is ignored", core.parseLine("## beta"), null);
 check("bullet is ignored", core.parseLine("- beta"), null);
@@ -93,10 +106,17 @@ check("second sibling indents and takes its subtree", lines(core.indentItem(doc,
 	"1. alpha",
 	"  1.1. beta",
 	"    1.1.1. gamma",
-	"      1.1.1.1. delta",
-	"      1.1.1.2. epsilon",
+	"      1) delta",
+	"      2) epsilon",
 	"  1.2. zeta",
 	"2. eta",
+]);
+check("level 3 indents into a bracket number", lines(core.indentItem(["1. a", "  1.1. b", "  1.2. c", "    1.2.1. d", "    1.2.2. e"], 4)), [
+	"1. a",
+	"  1.1. b",
+	"  1.2. c",
+	"    1.2.1. d",
+	"      1) e",
 ]);
 
 /* ------------------------------ outdent ------------------------------ */
@@ -106,6 +126,12 @@ const indented = lines(core.indentItem(doc, 2));
 check("outdent undoes the indent", lines(core.outdentItem(indented, 2)), doc);
 check("outdent at the top level falls through", core.outdentItem(doc, 0), null);
 check("outdent ignores a plain line", core.outdentItem(["plain"], 0), null);
+check("outdent turns 1) back into the dotted level 3", lines(core.outdentItem(["1. a", "  1.1. b", "    1.1.1. c", "      1) d"], 3)), [
+	"1. a",
+	"  1.1. b",
+	"    1.1.1. c",
+	"    1.1.2. d",
+]);
 
 /* ------------------------------- enter ------------------------------- */
 
@@ -193,6 +219,26 @@ const fenced = ["1. a", "```", "9.9. not ours", "```", "1. b"];
 core.renumberRange(fenced, 0, 4);
 check("code fences are never renumbered", fenced, ["1. a", "```", "9.9. not ours", "```", "1. b"]);
 
+const deep = ["1. a", "  1.1. b", "    1.1.1. c", "      1.1.1.1. d", "      1.1.1.2. e", "        1.1.1.2.1. f"];
+core.renumberRange(deep, 0, deep.length - 1);
+check("level 4 restarts at 1) and level 5 follows it", deep, [
+	"1. a",
+	"  1.1. b",
+	"    1.1.1. c",
+	"      1) d",
+	"      2) e",
+	"        2.1) f",
+]);
+
+const reBracketed = ["1. a", "  1.1. b", "  1) c", "  2) d"];
+core.renumberRange(reBracketed, 0, 3);
+check("a bracket number at level 2 is normalised to the dotted form", reBracketed, [
+	"1. a",
+	"  1.1. b",
+	"  1.2. c",
+	"  1.3. d",
+]);
+
 /* --------------------------- block helpers --------------------------- */
 
 console.log("insertNumbering / removeNumbering");
@@ -222,6 +268,13 @@ check("counters per level", core.headingNumbers(note).map((x) => x.number), ["1"
 check("a skipped level is filled in", core.headingNumbers(["# A", "### C"]).map((x) => x.number), ["1", "1.1.1"]);
 check("a note that starts at h2", core.headingNumbers(["## B", "## C"]).map((x) => x.number), ["1.1", "1.2"]);
 check("headings inside code fences are skipped", core.headingNumbers(["# A", "```", "# not a heading", "```", "## B"]).map((x) => x.number), ["1", "1.1"]);
+check("level 4 headings restart with a bracket", core.headingNumbers(["# A", "## B", "### C", "#### D", "##### E"]).map((x) => x.number), [
+	"1",
+	"1.1",
+	"1.1.1",
+	"1)",
+	"1.1)",
+]);
 
 console.log("numberHeadings / removeHeadingNumbers");
 const plainNote = ["# Alpha", "text", "## Beta", "### Gamma", "## Delta", "# Epsilon"];
@@ -236,6 +289,12 @@ check("numbers get written into the file", numberedNote, [
 ]);
 check("remove strips them again", core.removeHeadingNumbers(numberedNote), plainNote);
 check("numbering twice changes nothing", core.numberHeadings(numberedNote), null);
+check("a deep heading gets a bracket number", core.numberHeadings(["# A", "### C", "#### D"]), [
+	"# 1 A",
+	"### 1.1.1 C",
+	"#### 1) D",
+]);
+check("a bracket number is stripped from a heading", core.stripHeadingNumber("1) Title"), "Title");
 
 console.log("shiftHeadingLevel");
 const shiftable = ["# 1 Alpha", "## 1.1 Beta", "text under beta", "# 2 Epsilon"];
@@ -316,6 +375,29 @@ check("alt+up swaps the two children and the caret follows", doc2, [
 	"  2.2. gamma",
 ]);
 check("caret is on the moved line", doc2[2], "  2.1. delta");
+
+/* --------------------------- caret placement --------------------------- */
+
+console.log("prefixLength");
+check("numbered line", core.prefixLength("  1.1. text"), "  1.1. ".length);
+check("prefix-only line", core.prefixLength("  1.1. "), "  1.1. ".length);
+check("bracket line", core.prefixLength("      1) x"), "      1) ".length);
+check("numbered heading", core.prefixLength("### 1.1.1 Title"), "### 1.1.1 ".length);
+check("heading without a number", core.prefixLength("### Title"), "### ".length);
+check("plain line", core.prefixLength("hello"), null);
+
+console.log("caretAfter");
+/* The reported bug: Tab used to add only the indent to the old offset, so the
+ * caret landed inside the new number (`1.1|.` instead of `1.1. |`). */
+const tabDoc = ["1. a", "2. ", "3. c"];
+const tabbed = core.indentItem(tabDoc, 1);
+check("tab deepens a bare number", tabbed.lines[1], "  1.1. ");
+check("the caret ends up after the whole new number", core.caretAfter(tabDoc[1], tabbed.lines[1], tabDoc[1].length), "  1.1. ".length);
+check("a bracket line keeps the caret at its end", core.caretAfter("    1.2.2. ", "      1) ", 11), "      1) ".length);
+check("the caret stays inside the content", core.caretAfter("1. hello", "  1.1. hello", 8), "  1.1. hello".length);
+check("a caret parked in the prefix moves to the content start", core.caretAfter("1. hello", "  1.1. hello", 1), "  1.1. ".length);
+check("a heading keeps the caret after its number", core.caretAfter("## 1.1 Title", "### 1.1.1 Title", 7), "### 1.1.1 ".length);
+check("an unnumbered line is left alone", core.caretAfter("hello", "world", 3), 3);
 
 /* ---------------------------- minimalChange ---------------------------- */
 console.log("minimalChange");
