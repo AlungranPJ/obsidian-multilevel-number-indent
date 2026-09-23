@@ -3,7 +3,7 @@
 The lines come from main.js's own previewLines(), so the card can never drift
 from what the plugin actually writes. Run from the repository root:
 
-    python scratch/make-example-svg.py
+    python scripts/make-example-card.py
 """
 
 import pathlib
