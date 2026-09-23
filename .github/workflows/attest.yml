@@ -28,17 +28,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # A release is published once its assets have finished uploading, but the
-      # release API can still report an empty asset list for a few seconds after
-      # that. Reading it once fails the whole run, so poll instead.
+      # A release can be published before its asset list has propagated, and the
+      # REST lookup by tag has been seen to keep serving the pre-upload state for
+      # a while afterwards. `releases/<id>/assets` is the authoritative list, so
+      # resolve the id once and read the assets from there.
       - name: Wait for the release assets to appear
         run: |
           set -euo pipefail
           echo "waiting for assets on $TAG"
           for attempt in $(seq 1 20); do
-            count=$(gh release view "$TAG" --json assets --jq '.assets | length')
+            id=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq '.id')
+            count=$(gh api "repos/$GITHUB_REPOSITORY/releases/$id/assets" --jq 'length')
             if [ "$count" -ge 3 ]; then
-              echo "$count assets are listed"
+              echo "$count assets are listed on release $id"
               exit 0
             fi
             echo "attempt $attempt: $count assets so far, retrying in 15s"
@@ -48,7 +50,17 @@ jobs:
           exit 1
 
       - name: Download the published release assets
-        run: gh release download "$TAG" --dir release-assets --clobber
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq '.id')
+          gh api "repos/$GITHUB_REPOSITORY/releases/$id/assets" --jq '.[] | "\(.id) \(.name)"' |
+            while read -r asset_id name; do
+              gh api "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id" \
+                -H "Accept: application/octet-stream" > "release-assets/$name"
+              echo "downloaded $name"
+            done
+          ls -la release-assets
 
       - name: Check the assets match the committed files
         run: |
