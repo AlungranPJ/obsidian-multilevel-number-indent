@@ -1,9 +1,9 @@
 {
-	"id": "multilevel-number-indent",
+	"id": "nested-outline-numbering",
 	"name": "Multilevel Number Indent",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"minAppVersion": "1.5.0",
-	"description": "Hierarchical plain-text numbering for Obsidian outlines, driven by Tab, Shift-Tab, Enter and Alt-Arrow, in any number format you set.",
+	"description": "Hierarchical plain-text numbering for outlines and notes, driven by Tab, Shift-Tab, Enter and Alt-Arrow, in any number format you set.",
 	"author": "AlungranPJ",
 	"authorUrl": "https://github.com/AlungranPJ",
 	"isDesktopOnly": false

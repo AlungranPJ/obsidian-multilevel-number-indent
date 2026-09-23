@@ -87,7 +87,7 @@ I.         ->  I. II. III.    เลขโรมัน
 
 ## ติดตั้ง
 
-คัดลอก 3 ไฟล์ไปที่ `<vault>/.obsidian/plugins/multilevel-number-indent/`
+คัดลอก 3 ไฟล์ไปที่ `<vault>/.obsidian/plugins/nested-outline-numbering/`
 
 ```
 main.js
@@ -95,7 +95,7 @@ manifest.json
 styles.css
 ```
 
-แล้วเพิ่ม `"multilevel-number-indent"` ลงใน `<vault>/.obsidian/community-plugins.json` หรือเปิดจาก
+แล้วเพิ่ม `"nested-outline-numbering"` ลงใน `<vault>/.obsidian/community-plugins.json` หรือเปิดจาก
 `Settings → Community plugins` (กด reload ถ้าเพิ่งวางไฟล์)
 
 ## ติดตั้งบนเครื่องอื่น

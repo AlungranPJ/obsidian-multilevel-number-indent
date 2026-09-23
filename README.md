@@ -111,7 +111,7 @@ Each command is a single editor transaction, so one <kbd>Ctrl</kbd>+<kbd>Z</kbd>
 
 ### Manually
 
-Copy `main.js`, `manifest.json` and `styles.css` into `<vault>/.obsidian/plugins/multilevel-number-indent/`, then enable the plugin in **Settings → Community plugins**.
+Copy `main.js`, `manifest.json` and `styles.css` into `<vault>/.obsidian/plugins/nested-outline-numbering/`, then enable the plugin in **Settings → Community plugins**.
 
 ## Compatibility
 
