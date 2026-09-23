@@ -29,17 +29,17 @@ You press <kbd>Tab</kbd>, the item steps one level deeper and its whole subtree 
 
 This one is about the two things that were still getting in the way: getting **text you can actually use** out of the plugin, and a settings tab that bends to the note instead of the other way round.
 
-- **Grow or shrink the level list** right in the settings tab, and decide what a line past the last level becomes. With "leave it as text" the notes under an item stay body text and <kbd>Tab</kbd> stops politely at the edge of the outline instead of shoving items out of it.
-- **Presets**, so nobody has to build `1.1(a)` by hand. Six ship with the plugin, you can save your own, and the whole set moves between machines as JSON. A saved preset with a shipped name quietly replaces it.
+- **Grow or shrink the level list** right in the settings tab, and decide what a line past the last level becomes. Pick "leave it as text" and the notes under an item stay body text: <kbd>Tab</kbd> then stops at the edge of the outline instead of pushing those notes out of it.
+- **Presets**, so nobody has to build `1.1(a)` by hand. Six come with the plugin, you can save your own, and the whole set moves between machines as JSON. Save under a name a shipped preset already uses and yours takes its place.
 - **Thai number styles**: `ก` for `ก` `ข` `ค`, `๑` for `๑` `๒` `๓`. `ข้อ ๑.` is written the same way `1.1(a)` is.
 - **Per-note formats** in the frontmatter, so a legal note and a workshop note can live in one vault in different shapes. The global settings come back on the next note without you touching anything.
-- **`Normalize the outline`** for the note that drifted: the indent goes back to whole units, `1.text` gets its space back, the trailing whitespace goes, and every number is recomputed from the depth the indentation actually says.
+- **`Normalize the outline`** for the note that drifted. It puts the indent back into whole units, gives `1.text` its space back, drops trailing whitespace, and rewrites every number to match the indentation.
 - **Smart paste** for lists that arrive from somewhere else. Bullets, `1)`, `๑.`, `ก.` all become this numbering. It is opt-in and it only fires when the clipboard really looks like a list, so prose stays prose.
 - **Clean text on the way out**: links become their display text, callouts keep their titles and lose their markers, comments and emphasis go. `Save the selection as a clean note` drops it into a new file.
 - **Rich text on the way out** too: HTML and RTF with the numbering kept as literal text, or as a real nested list so Word and mail clients number it themselves.
 - **Multi-line selections move as one group**, subtrees included, which is what you wanted every time you tried to reorder a whole section.
 - **Cut and paste as a subtree**, and **Move the item to a level**, for the moves that are about structure rather than one keystroke.
-- **Indent guides** (a faint rule per level, background only, so the text and the clipboard never see it) and a **status bar** that tells you which level and which number is under the cursor.
+- **Indent guides**, one faint rule per level drawn as a background so the text itself is untouched, and a **status bar** that names the level and the number under the cursor.
 
 Also fixed on the way: blank lines between two siblings used to disappear when <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> swapped them, and body text written deeper than an item used to split the numbering block and restart the count. Both behave now.
 
@@ -72,11 +72,11 @@ Out of the box it looks like this:
 2. Summary
 ```
 
-Levels 1 to 3 carry the full path and end with a period: `1.` `1.1.` `1.1.1.` Level 4 and deeper restart the count and end with a bracket: `1)` `1.1)`. Two spaces of indentation per level, so the content column advances by exactly four characters each time and everything lines up on a plain grid.
+Levels 1 to 3 show the full path and end with a period: `1.` `1.1.` `1.1.1.` Level 4 and deeper restart the count and end with a bracket: `1)` `1.1)`. Each level adds two spaces of indent, so the text always starts four columns further to the right and lines up on a plain grid.
 
-The level is read from the indentation, never from the number, so indenting a line always renumbers it into the right shape. `1.1.1.` turns into `1)` when it drops to level 4, and `1)` walks back to `1.1.2.` when it comes up again. After <kbd>Tab</kbd> or <kbd>Shift</kbd>+<kbd>Tab</kbd> the caret keeps its place inside the content rather than the number: a bare `2. ` becomes `  1.1. |`, not `  1.1|. `.
+The level comes from the indentation, never from the number. That is why pressing <kbd>Tab</kbd> rewrites the number instead of only moving the line: `1.1.1.` becomes `1)` when it drops to level 4, and `1)` becomes `1.1.2.` when it moves back up. The caret stays in the text either way, so you end up typing at the end of the line and never in the middle of the number.
 
-`1.1.` is deliberately not a Markdown list marker, which is exactly why the numbers travel with the text. Only a root `1.` is a real list item, and `styles.css` neutralises Obsidian's list offset for the recognised lines so every level sits on the same grid.
+`1.1.` is deliberately not a Markdown list marker. That is the whole trick: the numbers are plain text, so they travel with the note. A root `1.` is the one exception, and `styles.css` undoes Obsidian's list indent on the recognised lines so every level stays on the same grid.
 
 ![The same outline rendered in six number formats](assets/example.svg)
 
@@ -92,7 +92,7 @@ The level is read from the indentation, never from the number, so indenting a li
 | `ก` | `ก` `ข` `ค` … |
 | `๑` | `๑` `๒` `๓` … |
 
-Everything else in a template is literal, so the separators and the closing mark are yours. How many placeholders a row carries decides how many trailing segments that level shows, which is how the shipped defaults restart the count at level 4:
+Everything else in a template is a plain character you typed, so the separators and the closing mark are yours to choose. What the placeholders decide is how much of the path a level shows: one placeholder means one segment, three mean the full path. That is why the shipped defaults restart the count at level 4, where the row is `1)`:
 
 ```text
 1.1.1.     ->  1.1.1.         full path, closed with a period
@@ -104,14 +104,14 @@ I.         ->  I. II. III.    roman numerals
 1.1(a)     ->  1.1(a)         legal style
 ```
 
-A row without a placeholder is ignored and keeps whatever it had. Numbers already written in the shipped defaults are still recognised after you change the format, so nothing gets orphaned: the next <kbd>Tab</kbd> simply rewrites them into the new shape.
+A row with no placeholder in it is ignored, and that level keeps the value it had before. Changing the format later is also safe: numbers written in the old shape are still recognised, and the next <kbd>Tab</kbd> rewrites them into the new one.
 
 ### Levels, and what comes after them
 
-The level list is as long as your note needs it: **Add level** and **Remove** sit on every row. The setting just under the indent width is the one that decides how the list behaves past the end:
+Make the level list as long as the note needs: every row has **Add level** and **Remove**, and the list can run from two levels to twelve. What happens past the last level is a separate setting, **Deeper than the last level**:
 
-- **Reuse the last level** keeps numbering every depth. This is the shipped behaviour and it is what you want for a document with no natural end.
-- **Leave it as text** keeps the indent but drops the number. This is the one for notes that belong to an item rather than being part of the outline: <kbd>Tab</kbd> stops working past the last level instead of pushing items out of it.
+- **Reuse the last level** keeps numbering at every depth, however deep the note goes. This is the shipped setting.
+- **Leave it as text** keeps the indent and drops the number. Use it for notes that belong to an item rather than being part of the outline: <kbd>Tab</kbd> then stops at the last level instead of pushing those notes out of the outline.
 
 ### Per-note formats
 
@@ -128,11 +128,11 @@ numbering:
 ---
 ```
 
-`formats` also takes one line: `formats: ["a.", "a.a."]`. A value that does not fit the format language is ignored rather than half applied.
+`formats` also fits on one line: `formats: ["a.", "a.a."]`. A value that is not a valid template is ignored instead of being half applied.
 
 ### Presets
 
-A preset is just a whole level list with a name. Six ship with the plugin: dotted then brackets, full path dots, letters, roman numerals, legal style and Thai. **Apply a preset** replaces the levels above, **Save the current list** keeps whatever you built under a name, and a saved preset carrying a shipped name takes its place.
+A preset is a whole level list saved under a name. Six come with the plugin: dotted then brackets, full path dots, letters, roman numerals, legal style and Thai. **Apply a preset** replaces the level list with the preset's, **Save the current list** saves what you built under a name of yours, and saving under a name that already exists replaces the old one.
 
 The **Preset JSON** box is how the saved ones travel: **Export** copies them to the clipboard ready for another machine, **Import** reads the box and replaces the saved list, and anything that is not a clean list of presets is refused rather than half imported.
 
@@ -151,7 +151,7 @@ The numbering is only half the job. What matters is the text that comes out.
 | `Copy as formatted text` | HTML and RTF on the clipboard with the numbering kept exactly as it reads in the note. |
 | `Copy as a real nested list` | HTML and RTF on the clipboard as a real nested list, so Word and mail clients number it themselves. |
 
-**Format pasted lists** in the settings tab turns the first of these on for <kbd>Ctrl</kbd>+<kbd>V</kbd> as well. It ships off, and it only fires on text that really looks like a list.
+**Format pasted lists** in the settings tab does that conversion automatically when you press <kbd>Ctrl</kbd>+<kbd>V</kbd>. It ships switched off, and it only fires on text that really looks like a list.
 
 ## Heading numbering
 
@@ -229,11 +229,11 @@ There is no compilation step: `npm run build` runs that suite, which is how the 
 
 These are the edges I know about. They are stated here rather than hidden.
 
-- A template's `1` `a` `A` `i` `I` `ก` `๑` are placeholders, so literal text carrying those letters renders as counters. Keep a prefix to letters outside that set, or use `ข้อ ๑.` style prefixes where the Thai letters stand for themselves.
+- Inside a template the letters `1` `a` `A` `i` `I` `ก` `๑` are placeholders, so a literal word that contains one of them renders as a counter. Build prefixes out of other letters, or write them like `ข้อ ๑.`, where only the Thai numeral is a placeholder and `ข้อ ` is literal.
 - `formats` in the frontmatter reads a block list, or a flow list written on one line.
-- A plain-text item can only be indented when an earlier sibling already exists at the same level: the first child of a level has nothing to become a child of. This is the same rule Word follows.
+- A plain-text item can only be indented when an earlier item at that level exists for it to become a child of. This is the same rule Word follows.
 - Skipped heading levels get filled in with `1`, so `#` followed by `###` numbers as `1` then `1.1.1`.
-- The rich clipboard writes `text/plain`, `text/html` and `text/rtf`. An application reading none of them falls back to the plain text, numbering kept.
+- The rich clipboard writes `text/plain`, `text/html` and `text/rtf`. An application that reads none of them still gets the plain text, with the numbering kept.
 
 ## License
 
