@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="The same text, three states: pasted from Word, in the note, out as clean text">
+  <defs>
+    <linearGradient id="card" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#1d1d21"/>
+      <stop offset="1" stop-color="#141417"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="420" rx="22" fill="url(#card)"/>
+  <rect x="0" y="0" width="1200" height="60" rx="22" fill="#27272a"/>
+  <rect x="0" y="36" width="1200" height="24" fill="#27272a"/>
+  <circle cx="36" cy="30" r="7" fill="#52525b"/>
+  <circle cx="60" cy="30" r="7" fill="#52525b"/>
+  <circle cx="84" cy="30" r="7" fill="#3f3f46"/>
+  <text x="112" y="37" font-family="Consolas, 'Noto Sans Mono', 'Leelawadee UI', Tahoma, ui-monospace, monospace" font-size="18" fill="#71717a">flow.md</text>
+
+  <text x="72" y="118" font-family="'Segoe UI', 'Leelawadee UI', ui-sans-serif, -apple-system, Roboto, Helvetica, Arial, sans-serif" font-size="21" fill="#a1a1aa">The same text, three states. This is what the plugin is for.</text>
+
+  <g font-family="Consolas, 'Noto Sans Mono', 'Leelawadee UI', Tahoma, ui-monospace, monospace">
+    <text x="72" y="178" font-size="16" fill="#f97316">Pasted from Word</text>
+    <rect x="72" y="190" width="52" height="3" rx="1.5" fill="#f97316" opacity="0.45"/>
+    <text x="72.0" y="236" fill="#71717a">Introduction</text>
+    <text x="90.7" y="270" fill="#f97316">◦</text>
+    <text x="109.4" y="270" fill="#71717a">Scope</text>
+    <text x="109.4" y="304" fill="#f97316">◦</text>
+    <text x="128.1" y="304" fill="#71717a">Detail</text>
+    <text x="128.1" y="338" fill="#f97316">•</text>
+    <text x="146.8" y="338" fill="#71717a">First point</text>
+  </g>
+
+  <g font-family="Consolas, 'Noto Sans Mono', 'Leelawadee UI', Tahoma, ui-monospace, monospace">
+    <text x="452" y="178" font-size="16" fill="#f97316">In your note</text>
+    <rect x="452" y="190" width="52" height="3" rx="1.5" fill="#f97316" opacity="0.45"/>
+    <text x="452.0" y="236" fill="#e4e4e7">1.</text>
+    <text x="480.1" y="236" fill="#71717a">Introduction</text>
+    <text x="470.7" y="270" fill="#e4e4e7">1.1.</text>
+    <text x="517.5" y="270" fill="#71717a">Scope</text>
+    <text x="489.4" y="304" fill="#e4e4e7">1.1.1.</text>
+    <text x="554.9" y="304" fill="#71717a">Detail</text>
+    <text x="508.1" y="338" fill="#f97316">1)</text>
+    <text x="536.1" y="338" fill="#71717a">First point</text>
+  </g>
+
+  <g font-family="Consolas, 'Noto Sans Mono', 'Leelawadee UI', Tahoma, ui-monospace, monospace">
+    <text x="832" y="178" font-size="16" fill="#f97316">Out as clean text</text>
+    <rect x="832" y="190" width="52" height="3" rx="1.5" fill="#f97316" opacity="0.45"/>
+    <text x="832.0" y="236" fill="#a1a1aa">Introduction</text>
+    <text x="850.7" y="270" fill="#a1a1aa">Scope</text>
+    <text x="869.4" y="304" fill="#a1a1aa">Detail</text>
+    <text x="888.1" y="338" fill="#a1a1aa">First point</text>
+  </g>
+
+  <g stroke="#f97316" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 334.8 281.5 H 362.8"/>
+    <path d="M 352.8 272.5 L 363.8 281.5 L 352.8 290.5"/>
+  </g>
+
+  <g stroke="#f97316" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M 719.5 281.5 H 747.5"/>
+    <path d="M 737.5 272.5 L 748.5 281.5 L 737.5 290.5"/>
+  </g>
+
+</svg>

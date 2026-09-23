@@ -43,6 +43,8 @@ This one is about the two things that were still getting in the way: getting **t
 
 Also fixed on the way: blank lines between two siblings used to disappear when <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> swapped them, and body text written deeper than an item used to split the numbering block and restart the count. Both behave now.
 
+![The settings tab: as many levels as the note needs, and what happens past the last one](assets/settings.png)
+
 ## The keys
 
 | Key | On a numbered line | On a heading line |
