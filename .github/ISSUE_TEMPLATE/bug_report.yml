@@ -1,0 +1,78 @@
+name: Bug report
+description: A key or a command does the wrong thing, or does nothing
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The numbers are written into the note as plain text, so a wrong keystroke
+        can change a real note. Please reproduce on a copy before reporting.
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      description: Settings, then Community plugins, then Nested Outline Numbering.
+      placeholder: "1.2.0"
+    validations:
+      required: true
+
+  - type: input
+    id: obsidian-version
+    attributes:
+      label: Obsidian version
+      description: Settings, then About.
+      placeholder: "1.13.7"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: symptom
+    attributes:
+      label: What goes wrong
+      options:
+        - Tab or Shift+Tab does not renumber the line
+        - Enter does not continue the list or step out
+        - Alt+Down or Alt+Up moves the wrong lines, or leaves the cursor behind
+        - The numbers come out in the wrong shape
+        - A command does nothing, or is missing
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Type ...
+        2. Put the cursor at ...
+        3. Press ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: note
+    attributes:
+      label: The lines involved
+      description: Paste them with the numbering intact, or describe the shape if the content is private.
+      render: markdown
+    validations:
+      required: false
+
+  - type: textarea
+    id: settings
+    attributes:
+      label: Your number format settings
+      description: Settings, then Nested Outline Numbering. The templates and the indent width.
+      render: text
+    validations:
+      required: false

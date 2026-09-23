@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: How the plugin is meant to behave
+    url: https://github.com/AlungranPJ/obsidian-nested-outline-numbering#readme
+    about: The README covers the keys, the commands and the number format.
+  - name: Install, update, or uninstall
+    url: https://community.obsidian.md/plugins/nested-outline-numbering
+    about: The community listing handles installing and updating the plugin.
