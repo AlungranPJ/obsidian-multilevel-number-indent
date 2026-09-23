@@ -9,6 +9,10 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to attest
+        required: false
 
 permissions:
   contents: read
@@ -18,15 +22,33 @@ permissions:
 jobs:
   attest:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag || github.event.release.tag_name || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download the published release assets
-        env:
-          GH_TOKEN: ${{ github.token }}
+      # A release is published once its assets have finished uploading, but the
+      # release API can still report an empty asset list for a few seconds after
+      # that. Reading it once fails the whole run, so poll instead.
+      - name: Wait for the release assets to appear
         run: |
-          gh release download "${{ github.event.release.tag_name || github.ref_name }}" \
-            --dir release-assets --clobber
+          set -euo pipefail
+          echo "waiting for assets on $TAG"
+          for attempt in $(seq 1 20); do
+            count=$(gh release view "$TAG" --json assets --jq '.assets | length')
+            if [ "$count" -ge 3 ]; then
+              echo "$count assets are listed"
+              exit 0
+            fi
+            echo "attempt $attempt: $count assets so far, retrying in 15s"
+            sleep 15
+          done
+          echo "::error::$TAG still lists no assets after five minutes"
+          exit 1
+
+      - name: Download the published release assets
+        run: gh release download "$TAG" --dir release-assets --clobber
 
       - name: Check the assets match the committed files
         run: |
