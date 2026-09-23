@@ -21,7 +21,7 @@ There is no bundler and no build step. `npm run build` runs `test/core.test.js`,
 
 Add assertions for behaviour you change. A keystroke handler cannot be checked by hand without driving the GUI, so the test file is the only place a regression gets caught before a user finds it.
 
-To try a change in a real vault, copy `main.js`, `manifest.json` and `styles.css` into `<vault>/.obsidian/plugins/nested-outline-numbering/` and reload the plugin.
+To try a change in a real vault, copy `main.js`, `manifest.json` and `styles.css` into `<vault>/.obsidian/plugins/multilevel-number-indent/` and reload the plugin.
 
 ## Conventions
 

@@ -1,7 +1,7 @@
 {
-	"name": "nested-outline-numbering",
-	"version": "1.2.0",
-	"description": "Hierarchical plain-text numbering for Obsidian outlines.",
+	"name": "multilevel-number-indent",
+	"version": "2.0.0",
+	"description": "Hierarchical plain-text numbering for Obsidian outlines, in any number format you set.",
 	"private": true,
 	"license": "MIT",
 	"scripts": {
@@ -12,6 +12,8 @@
 		"obsidian",
 		"obsidian-plugin",
 		"outline",
-		"numbering"
+		"numbering",
+		"multilevel",
+		"indent"
 	]
 }

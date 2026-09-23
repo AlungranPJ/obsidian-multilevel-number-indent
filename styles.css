@@ -10,7 +10,7 @@
  * tab-size matches how the core counts a tab when it works out a level, so a
  * tab indent renders the same width the numbering assumes.
  */
-.markdown-source-view.mod-cm6 .cm-line.nested-outline-numbering-line {
+.markdown-source-view.mod-cm6 .cm-line.multilevel-number-indent-line {
 	--list-padding-inline-start: 0px;
 	--list-marker-space: 0px;
 	--list-indent: 0px;
@@ -20,7 +20,7 @@
 
 /* Lines with four or more leading spaces are parsed as indented code blocks,
  * but these lines are outline items. Drop the code block look. */
-.markdown-source-view.mod-cm6 .cm-content .cm-line.nested-outline-numbering-line.HyperMD-codeblock {
+.markdown-source-view.mod-cm6 .cm-content .cm-line.multilevel-number-indent-line.HyperMD-codeblock {
 	padding-inline-start: 0;
 	font-family: var(--font-text);
 	font-size: var(--font-text-size);
@@ -28,13 +28,13 @@
 	direction: inherit;
 }
 
-.cm-s-obsidian div.cm-line.nested-outline-numbering-line.HyperMD-codeblock-bg {
+.cm-s-obsidian div.cm-line.multilevel-number-indent-line.HyperMD-codeblock-bg {
 	background-color: transparent;
 	border-width: 0;
 }
 
 /* Settings tab: live preview of the numbering the current templates produce. */
-.nested-outline-preview {
+.multilevel-number-indent-preview {
 	margin: 0;
 	padding: var(--size-4-3);
 	overflow-x: auto;

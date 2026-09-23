@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="460" viewBox="0 0 1200 460" role="img" aria-label="The same outline rendered in four number formats">
+  <defs>
+    <linearGradient id="card" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#1d1d21"/>
+      <stop offset="1" stop-color="#141417"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="460" rx="22" fill="url(#card)"/>
+  <rect x="0" y="0" width="1200" height="60" rx="22" fill="#27272a"/>
+  <rect x="0" y="36" width="1200" height="24" fill="#27272a"/>
+  <circle cx="36" cy="30" r="7" fill="#52525b"/>
+  <circle cx="60" cy="30" r="7" fill="#52525b"/>
+  <circle cx="84" cy="30" r="7" fill="#3f3f46"/>
+  <text x="112" y="37" font-family="Consolas, ui-monospace, monospace" font-size="18" fill="#71717a">outline.md</text>
+
+  <text x="72" y="118" font-family="Segoe UI, ui-sans-serif, -apple-system, Roboto, Helvetica, Arial, sans-serif" font-size="21" fill="#a1a1aa">The same outline, four number formats. The level reads the indentation, not the number.</text>
+
+  <g font-family="Consolas, ui-monospace, SFMono-Regular, Menlo, monospace">
+    <text x="72" y="178" font-size="16" fill="#f97316">1.  1.1.  1.1.1.</text>
+    <rect x="72" y="190" width="52" height="3" rx="1.5" fill="#f97316" opacity="0.45"/>
+    <text x="72.0" y="236" fill="#e4e4e7">1.</text>
+    <text x="90.7" y="236" fill="#71717a">Introduction</text>
+    <text x="90.7" y="270" fill="#e4e4e7">1.1.</text>
+    <text x="128.1" y="270" fill="#71717a">Scope</text>
+    <text x="109.4" y="304" fill="#e4e4e7">1.1.1.</text>
+    <text x="165.5" y="304" fill="#71717a">Detail</text>
+    <text x="128.1" y="338" fill="#f97316">1)</text>
+    <text x="146.8" y="338" fill="#71717a">Point</text>
+  </g>
+
+  <g font-family="Consolas, ui-monospace, SFMono-Regular, Menlo, monospace">
+    <text x="352" y="178" font-size="16" fill="#f97316">1)  1.1)</text>
+    <rect x="352" y="190" width="52" height="3" rx="1.5" fill="#f97316" opacity="0.45"/>
+    <text x="352.0" y="236" fill="#e4e4e7">1)</text>
+    <text x="370.7" y="236" fill="#71717a">Introduction</text>
+    <text x="370.7" y="270" fill="#e4e4e7">1.1)</text>
+    <text x="408.1" y="270" fill="#71717a">Scope</text>
+    <text x="389.4" y="304" fill="#e4e4e7">1.1.1)</text>
+    <text x="445.5" y="304" fill="#71717a">Detail</text>
+    <text x="408.1" y="338" fill="#f97316">1.1.1.1)</text>
+    <text x="482.9" y="338" fill="#71717a">Point</text>
+  </g>
+
+  <g font-family="Consolas, ui-monospace, SFMono-Regular, Menlo, monospace">
+    <text x="632" y="178" font-size="16" fill="#f97316">I.  I.I.</text>
+    <rect x="632" y="190" width="52" height="3" rx="1.5" fill="#f97316" opacity="0.45"/>
+    <text x="632.0" y="236" fill="#e4e4e7">I.</text>
+    <text x="650.7" y="236" fill="#71717a">Introduction</text>
+    <text x="650.7" y="270" fill="#e4e4e7">I.I.</text>
+    <text x="688.1" y="270" fill="#71717a">Scope</text>
+    <text x="669.4" y="304" fill="#e4e4e7">I.I.I.</text>
+    <text x="725.5" y="304" fill="#71717a">Detail</text>
+    <text x="688.1" y="338" fill="#f97316">I.I.I.I.</text>
+    <text x="762.9" y="338" fill="#71717a">Point</text>
+  </g>
+
+  <g font-family="Consolas, ui-monospace, SFMono-Regular, Menlo, monospace">
+    <text x="912" y="178" font-size="16" fill="#f97316">a)  a.a)</text>
+    <rect x="912" y="190" width="52" height="3" rx="1.5" fill="#f97316" opacity="0.45"/>
+    <text x="912.0" y="236" fill="#e4e4e7">a)</text>
+    <text x="930.7" y="236" fill="#71717a">Introduction</text>
+    <text x="930.7" y="270" fill="#e4e4e7">a.a)</text>
+    <text x="968.1" y="270" fill="#71717a">Scope</text>
+    <text x="949.4" y="304" fill="#e4e4e7">a.a.a)</text>
+    <text x="1005.5" y="304" fill="#71717a">Detail</text>
+    <text x="968.1" y="338" fill="#f97316">a.a.a.a)</text>
+    <text x="1042.9" y="338" fill="#71717a">Point</text>
+  </g>
+
+  <text x="72" y="418" font-family="Segoe UI, ui-sans-serif, -apple-system, Roboto, Helvetica, Arial, sans-serif" font-size="18" fill="#52525b">Every format is set per level in Settings, and previewed as you type.</text>
+</svg>

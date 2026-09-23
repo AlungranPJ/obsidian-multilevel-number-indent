@@ -1,4 +1,4 @@
-# Nested Outline Numbering
+# Multilevel Number Indent
 
 Obsidian plugin ที่รวมระบบเลขลำดับชั้นไว้ในตัวเดียว ทำงานได้ทั้ง 2 แบบ
 
@@ -25,7 +25,7 @@ Obsidian plugin ที่รวมระบบเลขลำดับชั้�
 
 ## ตั้งค่ารูปแบบเอง
 
-`Settings → Nested Outline Numbering` มีช่องให้กำหนด template ของแต่ละชั้น กับความกว้าง indent และมี preview ให้เห็นผลทันทีที่พิมพ์
+`Settings → Multilevel Number Indent` มีช่องให้กำหนด template ของแต่ละชั้น กับความกว้าง indent และมี preview ให้เห็นผลทันทีที่พิมพ์
 
 placeholder ที่ใช้ได้
 
@@ -87,7 +87,7 @@ I.         ->  I. II. III.    เลขโรมัน
 
 ## ติดตั้ง
 
-คัดลอก 3 ไฟล์ไปที่ `<vault>/.obsidian/plugins/nested-outline-numbering/`
+คัดลอก 3 ไฟล์ไปที่ `<vault>/.obsidian/plugins/multilevel-number-indent/`
 
 ```
 main.js
@@ -95,7 +95,7 @@ manifest.json
 styles.css
 ```
 
-แล้วเพิ่ม `"nested-outline-numbering"` ลงใน `<vault>/.obsidian/community-plugins.json` หรือเปิดจาก
+แล้วเพิ่ม `"multilevel-number-indent"` ลงใน `<vault>/.obsidian/community-plugins.json` หรือเปิดจาก
 `Settings → Community plugins` (กด reload ถ้าเพิ่งวางไฟล์)
 
 ## ติดตั้งบนเครื่องอื่น

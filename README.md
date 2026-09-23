@@ -1,29 +1,28 @@
-# Nested Outline Numbering
+![Multilevel Number Indent](assets/banner.svg)
 
-Hierarchical numbering for Obsidian outlines, written into the note as real text.
+[![Release](https://img.shields.io/github/v/release/AlungranPJ/obsidian-multilevel-number-indent?style=flat-square&label=release&labelColor=27272a&color=f97316)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/releases/latest)
+[![CI](https://img.shields.io/github/actions/workflow/status/AlungranPJ/obsidian-multilevel-number-indent/ci.yml?style=flat-square&label=CI&labelColor=27272a)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-160_passing-f97316?style=flat-square&labelColor=27272a)](#development)
+[![Obsidian](https://img.shields.io/badge/Obsidian-1.5%2B-52525b?style=flat-square&labelColor=27272a)](#compatibility)
+[![License](https://img.shields.io/badge/license-MIT-52525b?style=flat-square&labelColor=27272a)](LICENSE)
+[![Downloads](https://img.shields.io/github/downloads/AlungranPJ/obsidian-multilevel-number-indent/total?style=flat-square&label=downloads&labelColor=27272a&color=52525b)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/releases)
 
-![Nested Outline Numbering in Obsidian: 1. / 1.1. / 1.2.1. down to 1) and 2.1)](assets/demo.png)
+Numbering for Obsidian outlines, written into the note as **real text**, in whatever number format you set.
 
-Press <kbd>Tab</kbd> and an item goes one level deeper, carrying its whole subtree with it:
+Press <kbd>Tab</kbd> on an item and it steps one level deeper, carrying its whole subtree with it. The numbers are plain characters in the file, not a rendering trick, so they survive copy and paste, export, sync, and any other Markdown editor.
 
-```text
-1. Introduction
-  1.1. Scope          ← Tab on this line
-  1.2. Method
-2. Summary
-```
+![Multilevel Number Indent in Obsidian: 1. / 1.1. / 1.2.1. down to 1) and 2.1)](assets/demo.png)
 
-```text
-1. Introduction
-  1.1. Scope
-    1.1.1. Scope          ← becomes a child of the line above, renumbered
-  1.2. Method
-2. Summary
-```
+## What sets it apart
 
-Because the numbers are plain characters in the file, not a rendering trick, they survive copy and paste, export, sync, and any other Markdown editor.
-
-The same keys work on Markdown headings, so a note can be numbered as `1` / `1.1` / `1.1.1` / `1)` in both styles.
+| | |
+|---|---|
+| **Any number format, per level** | `1.` `1.1.` `1.1.1.` `1)` `a)` `I.` and anything you build from them. Set it in the settings tab, with a live preview. |
+| **The count can restart at any depth** | The shipped default drops the full path at level 4 and restarts: `1)` `2)` `3)`. |
+| **Move an item, not just indent it** | <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> swaps an item with its sibling at the same level, takes the subtree along, and leaves the caret on the item. |
+| **Headings use the same engine** | `# 1 Introduction`, `## 1.1 Scope`, `#### 1) Point`, numbered and renumbered by the same rules. |
+| **Nothing leaves your vault** | No network calls, no telemetry, no runtime dependencies, and no build step in the shipped file. |
+| **Verifiable releases** | Every release asset is byte-compared against the committed file and carries a build provenance attestation. |
 
 ## Keys
 
@@ -38,7 +37,7 @@ Every key is scoped. A line the plugin does not recognise is never touched, so <
 
 <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> never changes an item's depth. At the top or bottom of a level it does nothing; use <kbd>Tab</kbd> or <kbd>Shift</kbd>+<kbd>Tab</kbd> to change depth. The caret follows the item to its new line.
 
-## The plain-text format
+## The number format
 
 Out of the box the numbering looks like this:
 
@@ -58,13 +57,15 @@ Out of the box the numbering looks like this:
 
 The level is read from the indentation, not from the number, so indenting a line always renumbers it into the right shape — `1.1.1.` becomes `1)` when it drops to level 4, and `1)` walks back to `1.1.2.` when it comes up again.
 
+![The same outline rendered in four number formats](assets/example.svg)
+
 After <kbd>Tab</kbd> or <kbd>Shift</kbd>+<kbd>Tab</kbd> the caret keeps its place inside the content, never inside the number: a bare `2. ` becomes `  1.1. |`, not `  1.1|. `.
 
 `1.1.` is not a Markdown list marker, which is exactly why the numbers travel with the text. Only a root `1.` is a real list item, and `styles.css` neutralises Obsidian's list offset for the recognised lines so every level lines up.
 
 ## Settings
 
-**Settings → Nested Outline Numbering** holds one number template per level plus the indent width, and previews the result live as you type.
+**Settings → Multilevel Number Indent** holds one number template per level plus the indent width, and previews the result live as you type.
 
 | Placeholder | Renders |
 |---|---|
@@ -96,9 +97,9 @@ Changing a heading level or moving a section renumbers the note automatically **
 |---|---|
 | `Number headings in note` | Write `1` / `1.1` / `1.1.1` into every heading |
 | `Remove heading numbers` | Strip the numbers from every heading |
-| `Renumber nested block` | Recompute the plain-text numbers from the real indentation |
-| `Insert nested numbering` | Turn a space-indented outline into a numbered one |
-| `Remove nested numbering` | Strip the plain-text numbers, keeping the indentation |
+| `Renumber multilevel block` | Recompute the plain-text numbers from the real indentation |
+| `Insert multilevel numbering` | Turn a space-indented outline into a numbered one |
+| `Remove multilevel numbering` | Strip the plain-text numbers, keeping the indentation |
 
 Each command is a single editor transaction, so one <kbd>Ctrl</kbd>+<kbd>Z</kbd> restores everything.
 
@@ -106,11 +107,11 @@ Each command is a single editor transaction, so one <kbd>Ctrl</kbd>+<kbd>Z</kbd>
 
 ### From the community directory
 
-Once published: **Settings → Community plugins → Browse → Nested Outline Numbering**.
+**Settings → Community plugins → Browse → Multilevel Number Indent**.
 
 ### Manually
 
-Copy `main.js`, `manifest.json` and `styles.css` into `<vault>/.obsidian/plugins/nested-outline-numbering/`, then enable the plugin in **Settings → Community plugins**.
+Copy `main.js`, `manifest.json` and `styles.css` into `<vault>/.obsidian/plugins/multilevel-number-indent/`, then enable the plugin in **Settings → Community plugins**.
 
 ## Compatibility
 
@@ -130,7 +131,8 @@ The file is split into two parts:
 ## Development
 
 ```bash
-node test/core.test.js
+npm ci
+npm run build
 ```
 
 The test file stubs `require("obsidian")` and `require("@codemirror/*")` so `main.js` can be loaded in plain Node, then runs 160 assertions over the core: numbering, subtree moves, caret placement, code-fence handling, heading counters, the number templates and round-trips. It also builds the settings tab against small doubles for `Setting`, `PluginSettingTab` and the container element, and checks the rows, the preview and the validation. The first block checks the shape Obsidian's loader needs (`module.exports`, `.default`, `prototype.onload`), so a broken export cannot pass the suite.

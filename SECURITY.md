@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-Use [GitHub's private report form](https://github.com/AlungranPJ/obsidian-nested-outline-numbering/security/advisories/new).
+Use [GitHub's private report form](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/security/advisories/new).
 An ordinary issue is public, and a report about a plugin that edits notes should not be
 public before it is fixed.
 

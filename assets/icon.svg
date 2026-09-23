@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Multilevel Number Indent">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#303035"/>
+      <stop offset="1" stop-color="#18181b"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- the indent guide: one step per level -->
+  <path d="M 96 140 V 240 H 148 V 352 H 200 V 456"
+        fill="none" stroke="#f97316" stroke-width="14"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- one line per level, the number in front of a grey content bar -->
+  <g font-family="Consolas, ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="700">
+    <text x="176" y="225" font-size="76" fill="#fafafa">1.</text>
+    <rect x="300" y="188" width="160" height="26" rx="13" fill="#52525b"/>
+
+    <text x="228" y="337" font-size="56" fill="#e4e4e7">1.1.</text>
+    <rect x="390" y="309" width="80" height="22" rx="11" fill="#3f3f46"/>
+
+    <text x="280" y="441" font-size="40" fill="#a1a1aa">1.1.1.</text>
+    <rect x="430" y="420" width="50" height="18" rx="9" fill="#3f3f46"/>
+  </g>
+</svg>

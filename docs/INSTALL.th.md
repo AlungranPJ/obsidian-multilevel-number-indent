@@ -1,13 +1,13 @@
-# INSTALL runbook — Nested Outline Numbering
+# INSTALL runbook — Multilevel Number Indent
 
 เอกสารนี้เขียนให้ AI agent หรือคนอ่านแล้วทำตามได้เลยบนเครื่องอื่น ไม่ต้องตีความ
 
 ## ไฟล์ในแพ็กเกจ
 
 ```
-nested-outline-numbering/main.js          ตัว plugin (ไฟล์เดียวจบ ไม่ต้อง build)
-nested-outline-numbering/manifest.json
-nested-outline-numbering/styles.css
+multilevel-number-indent/main.js          ตัว plugin (ไฟล์เดียวจบ ไม่ต้อง build)
+multilevel-number-indent/manifest.json
+multilevel-number-indent/styles.css
 README.md                                 คู่มือใช้งานเต็ม
 ```
 
@@ -39,36 +39,36 @@ tasklist | grep -i obsidian || echo "ปิดแล้ว"
 ### 3. คัดลอกไฟล์ plugin
 
 ```bash
-PLUG="$VAULT/.obsidian/plugins/nested-outline-numbering"
+PLUG="$VAULT/.obsidian/plugins/multilevel-number-indent"
 mkdir -p "$PLUG"
-cp nested-outline-numbering/main.js       "$PLUG/"
-cp nested-outline-numbering/manifest.json "$PLUG/"
-cp nested-outline-numbering/styles.css    "$PLUG/"
+cp multilevel-number-indent/main.js       "$PLUG/"
+cp multilevel-number-indent/manifest.json "$PLUG/"
+cp multilevel-number-indent/styles.css    "$PLUG/"
 ls -la "$PLUG"
 ```
 
 ### 4. เพิ่ม id ลงรายการ plugin ที่เปิดใช้
 
-ไฟล์ `$VAULT/.obsidian/community-plugins.json` ต้องมี `"nested-outline-numbering"` อยู่ในอาร์เรย์
+ไฟล์ `$VAULT/.obsidian/community-plugins.json` ต้องมี `"multilevel-number-indent"` อยู่ในอาร์เรย์
 
 ```bash
 python - "$VAULT" <<'PY'
 import json, sys, os
 path = os.path.join(sys.argv[1], ".obsidian", "community-plugins.json")
 data = json.load(open(path, encoding="utf-8")) if os.path.exists(path) else []
-if "nested-outline-numbering" not in data:
-    data.append("nested-outline-numbering")
+if "multilevel-number-indent" not in data:
+    data.append("multilevel-number-indent")
     json.dump(data, open(path, "w", encoding="utf-8"), indent=2)
 print(json.dumps(data, indent=2))
 PY
 ```
 
-ถ้าไม่มี python ให้เปิดไฟล์ด้วย editor แล้วเพิ่มบรรทัด `"nested-outline-numbering"` เข้าไปในอาร์เรย์ (ระวังเครื่องหมายจุลภาค)
+ถ้าไม่มี python ให้เปิดไฟล์ด้วย editor แล้วเพิ่มบรรทัด `"multilevel-number-indent"` เข้าไปในอาร์เรย์ (ระวังเครื่องหมายจุลภาค)
 
 ### 5. เปิด Obsidian แล้วตรวจสอบ
 
 1. เปิด Obsidian
-2. `Settings → Community plugins` ควรเห็น **Nested Outline Numbering** อยู่ในสถานะเปิด
+2. `Settings → Community plugins` ควรเห็น **Multilevel Number Indent** อยู่ในสถานะเปิด
 3. ถ้าไม่เห็น ให้กดไอคอน reload ในหน้านั้น แล้ว enable เอง
 
 ## ตรวจสอบว่าทำงานจริง
@@ -135,7 +135,7 @@ PY
 ## ถอนการติดตั้ง
 
 ```bash
-rm -rf "$VAULT/.obsidian/plugins/nested-outline-numbering"
+rm -rf "$VAULT/.obsidian/plugins/multilevel-number-indent"
 ```
 
-แล้วลบ `"nested-outline-numbering"` ออกจาก `community-plugins.json`
+แล้วลบ `"multilevel-number-indent"` ออกจาก `community-plugins.json`

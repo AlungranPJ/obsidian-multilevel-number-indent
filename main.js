@@ -1,11 +1,11 @@
 /*
- * Nested Outline Numbering
+ * Multilevel Number Indent
  * Hierarchical plain-text numbering for Obsidian.
  *
  *   Level 1-3   1.  1.1.  1.1.1.
  *   Level 4+    1)  1.1)  1.1.1)     (the count restarts at level 4)
  *
- * Those are the shipped defaults. Settings -> Nested Outline Numbering holds one
+ * Those are the shipped defaults. Settings -> Multilevel Number Indent holds one
  * template per level, so the shape is yours: placeholders render the counter
  * (1 arabic, a/A letters, i/I roman) and every other character is literal.
  *
@@ -799,7 +799,7 @@ const CORE = {
 
 /* =============================== PLUGIN =============================== */
 
-class NestedOutlineNumbering extends Plugin {
+class MultilevelNumberIndent extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
@@ -823,17 +823,17 @@ class NestedOutlineNumbering extends Plugin {
 
 		this.addCommand({
 			id: "renumber-block",
-			name: "Renumber nested block",
+			name: "Renumber multilevel block",
 			editorCallback: (editor) => this.runRange(editor, renumberRange, "renumber"),
 		});
 		this.addCommand({
 			id: "insert-numbering",
-			name: "Insert nested numbering",
+			name: "Insert multilevel numbering",
 			editorCallback: (editor) => this.runRange(editor, insertNumbering, "insert"),
 		});
 		this.addCommand({
 			id: "remove-numbering",
-			name: "Remove nested numbering",
+			name: "Remove multilevel numbering",
 			editorCallback: (editor) => this.runRange(editor, removeNumbering, "remove"),
 		});
 		this.addCommand({
@@ -847,7 +847,7 @@ class NestedOutlineNumbering extends Plugin {
 			editorCallback: (editor) => this.runWholeNote(editor, removeHeadingNumbers),
 		});
 
-		this.addSettingTab(new NestedOutlineNumberingSettingTab(this.app, this));
+		this.addSettingTab(new MultilevelNumberIndentSettingTab(this.app, this));
 	}
 
 	async loadSettings() {
@@ -979,7 +979,7 @@ function buildDecorations(view) {
 	return builder.finish();
 }
 
-const numberingLine = Decoration.line({ class: "nested-outline-numbering-line" });
+const numberingLine = Decoration.line({ class: "multilevel-number-indent-line" });
 
 /** Tiny ordered range builder, avoids importing RangeSetBuilder. */
 class RangeSetBuilderLike {
@@ -999,7 +999,7 @@ class RangeSetBuilderLike {
 
 /* ============================ SETTINGS TAB ============================ */
 
-class NestedOutlineNumberingSettingTab extends PluginSettingTab {
+class MultilevelNumberIndentSettingTab extends PluginSettingTab {
 	constructor(app, plugin) {
 		super(app, plugin);
 		this.plugin = plugin;
@@ -1060,7 +1060,7 @@ class NestedOutlineNumberingSettingTab extends PluginSettingTab {
 		}
 
 		new Setting(containerEl).setName("Preview").setHeading();
-		this.previewEl = containerEl.createEl("pre", { cls: "nested-outline-preview" });
+		this.previewEl = containerEl.createEl("pre", { cls: "multilevel-number-indent-preview" });
 		this.renderPreview();
 	}
 
@@ -1071,7 +1071,7 @@ class NestedOutlineNumberingSettingTab extends PluginSettingTab {
 	}
 }
 
-module.exports = NestedOutlineNumbering;
-module.exports.default = NestedOutlineNumbering;
+module.exports = MultilevelNumberIndent;
+module.exports.default = MultilevelNumberIndent;
 module.exports.__core = CORE;
-module.exports.__settingsTab = NestedOutlineNumberingSettingTab;
+module.exports.__settingsTab = MultilevelNumberIndentSettingTab;

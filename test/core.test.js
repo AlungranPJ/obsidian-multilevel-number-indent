@@ -1,5 +1,5 @@
 /*
- * Unit tests for the pure core of Nested Outline Numbering.
+ * Unit tests for the pure core of Multilevel Number Indent.
  * Run with:  node test/core.test.js
  *
  * Obsidian and CodeMirror are stubbed so main.js can be required in plain Node.

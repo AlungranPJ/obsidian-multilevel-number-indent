@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
   - name: How the plugin is meant to behave
-    url: https://github.com/AlungranPJ/obsidian-nested-outline-numbering#readme
+    url: https://github.com/AlungranPJ/obsidian-multilevel-number-indent#readme
     about: The README covers the keys, the commands and the number format.
   - name: Install, update, or uninstall
-    url: https://community.obsidian.md/plugins/nested-outline-numbering
+    url: https://community.obsidian.md/plugins/multilevel-number-indent
     about: The community listing handles installing and updating the plugin.

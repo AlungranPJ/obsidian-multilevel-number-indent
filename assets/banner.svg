@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="280" viewBox="0 0 1280 280" role="img" aria-label="Multilevel Number Indent">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#232327"/>
+      <stop offset="1" stop-color="#131316"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1280" height="280" rx="20" fill="url(#bg)"/>
+
+  <!-- the mark -->
+  <g transform="translate(80, 70) scale(0.2734)">
+    <path d="M 96 140 V 240 H 148 V 352 H 200 V 456"
+          fill="none" stroke="#f97316" stroke-width="14"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <g font-family="Consolas, ui-monospace, SFMono-Regular, Menlo, monospace" font-weight="700">
+      <text x="176" y="225" font-size="76" fill="#fafafa">1.</text>
+      <rect x="300" y="188" width="160" height="26" rx="13" fill="#52525b"/>
+      <text x="228" y="337" font-size="56" fill="#e4e4e7">1.1.</text>
+      <rect x="390" y="309" width="80" height="22" rx="11" fill="#3f3f46"/>
+      <text x="280" y="441" font-size="40" fill="#a1a1aa">1.1.1.</text>
+      <rect x="430" y="420" width="50" height="18" rx="9" fill="#3f3f46"/>
+    </g>
+  </g>
+
+  <g font-family="Segoe UI, ui-sans-serif, -apple-system, Roboto, Helvetica, Arial, sans-serif">
+    <text x="272" y="140" font-size="46" font-weight="700" fill="#fafafa">Multilevel Number Indent</text>
+    <rect x="274" y="154" width="104" height="5" rx="2.5" fill="#f97316"/>
+    <text x="274" y="198" font-size="22" fill="#a1a1aa">Numbering written into the note as real text.</text>
+    <text x="274" y="230" font-size="22" fill="#71717a">Tab, Enter and Alt-Arrow, in the format you set.</text>
+  </g>
+
+  <!-- a quiet sample of the output, right aligned to balance the mark -->
+  <g font-family="Consolas, ui-monospace, SFMono-Regular, Menlo, monospace" font-size="19" text-anchor="end">
+    <text x="1200" y="118" fill="#71717a">1. Introduction</text>
+    <text x="1200" y="148" fill="#52525b">1.1. Scope</text>
+    <text x="1200" y="178" fill="#52525b">1.1.1. Detail</text>
+    <text x="1200" y="208" fill="#f97316" opacity="0.75">1) First point</text>
+  </g>
+</svg>
