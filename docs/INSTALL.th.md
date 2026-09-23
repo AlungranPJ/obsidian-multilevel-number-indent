@@ -120,7 +120,9 @@ PY
 
 ## คำสั่งใน Command Palette
 
-`Number headings in note`, `Remove heading numbers`, `Renumber nested block`, `Insert nested numbering`, `Remove nested numbering`
+`Number headings in note`, `Remove heading numbers`, `Renumber multilevel block`, `Insert multilevel numbering`, `Remove multilevel numbering`, `Normalize the outline`, `Turn the selection into a numbered outline`, `Cut the item with its subtree`, `Paste the cut item here`, `Move the item to a level`, `Copy as clean text`, `Save the selection as a clean note`, `Copy as formatted text`, `Copy as a real nested list`
+
+รายละเอียดของแต่ละคำสั่งอยู่ที่ [README.th.md](README.th.md)
 
 ## ปัญหาที่อาจเจอ
 
