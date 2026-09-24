@@ -1288,6 +1288,15 @@ function shiftBlockIndent(lines, steps) {
 	});
 }
 
+/** The keys that move a selected group as one. */
+const GROUP_KEYS = new Set(["indent", "outdent", "moveUp", "moveDown"]);
+
+/** True when a selection starting on line `from` is a group this plugin owns:
+ *  a numbered item, outside a code fence, and not a heading. */
+function startsGroup(lines, from) {
+	return Boolean(parseLine(lines[from])) && !fenceMask(lines)[from] && !parseHeading(lines[from]);
+}
+
 /**
  * Tab, Shift+Tab and Alt+Up/Down over a multi-line selection. Every selected
  * item keeps its subtree, so the whole group moves as one.
@@ -1929,6 +1938,12 @@ class MultilevelNumberIndent extends Plugin {
 		const from = editor.getCursor("from").line;
 		const to = editor.getCursor("to").line;
 		const grouped = from < to ? applyActionRange(before, from, to, action) : null;
+		/* A group that cannot move (no sibling to nest under, already at the
+		 * top, nothing to swap with) stays exactly as it is, still selected.
+		 * Falling back to the single-line move here tore the line under the
+		 * caret out of the group and dropped the selection. The key is
+		 * swallowed so the host's own Tab does not re-indent the raw text. */
+		if (from < to && !grouped && GROUP_KEYS.has(action) && startsGroup(before, from)) return true;
 		const result = grouped || applyAction(before, cursor.line, cursor.ch, action);
 		if (!result) return false;
 		const next = result.lines.join("\n");

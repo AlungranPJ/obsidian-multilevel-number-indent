@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.3.4
+
+The rest of the selection fix, found by pressing real keys in the app.
+
+- **A key with nowhere to go no longer breaks the group apart.** Press <kbd>Tab</kbd> twice on a selected group: the second press has no sibling to nest under, and 3.3.3 then fell back to moving just the line under the caret, which pulled that one line out on its own and dropped the selection. The same happened with <kbd>Alt</kbd>+<kbd>↑</kbd> at the top of a block. Now the group stays exactly where it is, still selected, and the next key that can move it moves all of it.
+- A selection over plain text, with no numbered item at its start, is still left to Obsidian.
+- Five new tests; two of them fail against 3.3.3.
+
 ## 3.3.3
 
 The selection stays put.

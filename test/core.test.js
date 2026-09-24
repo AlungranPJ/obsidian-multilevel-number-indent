@@ -974,6 +974,22 @@ const caretEd = fakeEditor(["1. top", "  1.1. a", "  1.2. b", "2. end"], { line:
 keyPlugin.runAction(caretEd, "moveUp");
 check("a plain caret stays a caret", caretEd.isRange(), false);
 
+/* The case the live keystroke test caught: after one Tab the group has no
+ * sibling above it to nest under, so a second Tab must leave it alone, still
+ * selected, instead of pulling the caret's line out on its own. */
+const stuckEd = fakeEditor(["1. top", "  1.1. first", "  1.2. A", "  1.3. B", "2. end"], { line: 2, ch: 3 }, { line: 3, ch: 6 });
+keyPlugin.runAction(stuckEd, "indent");
+const stuckBefore = stuckEd.lines().join("\n");
+const stuckOk = keyPlugin.runAction(stuckEd, "indent");
+check("a group that cannot go deeper stays put", stuckEd.lines().join("\n"), stuckBefore);
+check("the blocked key is swallowed and the group stays selected", [stuckOk, stuckEd.selected().join("+")], [true, "A+B"]);
+keyPlugin.runAction(stuckEd, "outdent");
+check("the next key still moves the whole group", stuckEd.selected().join("+"), "A+B");
+const topEd = fakeEditor(["1. top", "  1.1. A", "  1.2. B", "  1.3. c", "2. end"], { line: 1, ch: 0 }, { line: 2, ch: 4 });
+check("Alt+Up at the top of the block keeps the group selected", [keyPlugin.runAction(topEd, "moveUp"), topEd.selected().join("+")], [true, "A+B"]);
+const plainEd = fakeEditor(["plain one", "plain two", "1. item"], { line: 0, ch: 0 }, { line: 1, ch: 3 });
+check("a selection over plain text is left to the host", keyPlugin.runAction(plainEd, "indent"), false);
+
 console.log("cut and paste as a subtree");
 const v3Cut = core.cutItem(["1. alpha", "  1.1. beta", "    1.1.1. gamma", "  1.2. delta"], 1);
 check("a cut takes the item and its subtree", v3Cut.taken, ["  1.1. beta", "    1.1.1. gamma"]);
