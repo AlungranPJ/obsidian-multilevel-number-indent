@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.3.5
+
+The right-click menu, fixed so you can actually move around in it.
+
+- **The categories no longer get stuck.** In 3.3.0 each category was its own submenu, two levels deep. Obsidian's menu cannot switch between sibling submenus at that depth: once **Headings** opened, hovering or clicking **Copying out** did nothing until you clicked somewhere empty and started over. Now the categories are small headings inside the one **Multilevel list section** submenu, set off by separators, so every command is one hover and one click away and the pointer can slide straight from one category to the next.
+- **A new picture of the menu** in both READMEs, taken from the real app with the submenu open on a heading line.
+- Six new tests build the menu against a double and check its shape: no submenu inside the group, four labels that cannot be clicked, fifteen commands. Five of them fail against 3.3.4.
+
 ## 3.3.4
 
 The rest of the selection fix, found by pressing real keys in the app.

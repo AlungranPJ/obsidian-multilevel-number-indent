@@ -60,6 +60,15 @@ body.multilevel-number-indent-guides-on .markdown-source-view.mod-cm6 .cm-line.m
 	border-inline-end-color: transparent;
 }
 
+/* Category headings inside the right-click submenu: small, muted, not a target. */
+.menu .menu-item.is-label.is-disabled {
+	opacity: 1;
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+	cursor: default;
+}
+
 /* Settings tab: live preview of the numbering the current templates produce. */
 .multilevel-number-indent-preview {
 	margin: 0;

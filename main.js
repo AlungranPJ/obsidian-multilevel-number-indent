@@ -1838,21 +1838,29 @@ class MultilevelNumberIndent extends Plugin {
 				menu.addItem((item) => {
 					item.setTitle("Multilevel list section").setIcon("list-ordered");
 					const target = typeof item.setSubmenu === "function" ? item.setSubmenu() : menu;
+					/* The categories are labelled sections inside this one
+					 * submenu, not submenus of their own. The host cannot switch
+					 * between sibling submenus two levels deep: once one opens,
+					 * hovering or clicking another does nothing until the whole
+					 * menu is dismissed. One level with headings avoids that. */
+					let first = true;
 					for (const group of groups) {
 						const cmds = group.ids.map((id) => byId[id]).filter(visible);
 						if (cmds.length === 0) continue;
-						target.addItem((groupItem) => {
-							groupItem.setTitle(group.title);
-							const sub = typeof groupItem.setSubmenu === "function" ? groupItem.setSubmenu() : target;
-							for (const cmd of cmds) sub.addItem(run(cmd));
+						if (!first && typeof target.addSeparator === "function") target.addSeparator();
+						first = false;
+						target.addItem((label) => {
+							label.setTitle(group.title);
+							if (typeof label.setIsLabel === "function") label.setIsLabel(true);
+							if (typeof label.setDisabled === "function") label.setDisabled(true);
 						});
+						for (const cmd of cmds) target.addItem(run(cmd));
 					}
 					/* Anything the categories do not name still shows up, so a new
 					 * command can never silently miss the menu. */
-					for (const cmd of this.commandList || []) {
-						if (grouped[cmd.id] || !visible(cmd)) continue;
-						target.addItem(run(cmd));
-					}
+					const rest = (this.commandList || []).filter((cmd) => !grouped[cmd.id] && visible(cmd));
+					if (rest.length > 0 && typeof target.addSeparator === "function") target.addSeparator();
+					for (const cmd of rest) target.addItem(run(cmd));
 				});
 			})
 		);

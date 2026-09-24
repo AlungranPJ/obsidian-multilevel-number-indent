@@ -990,6 +990,69 @@ check("Alt+Up at the top of the block keeps the group selected", [keyPlugin.runA
 const plainEd = fakeEditor(["plain one", "plain two", "1. item"], { line: 0, ch: 0 }, { line: 1, ch: 3 });
 check("a selection over plain text is left to the host", keyPlugin.runAction(plainEd, "indent"), false);
 
+/* The right-click group: one submenu, the categories as labelled sections
+ * inside it. Nested submenus two levels deep got stuck in the host (the
+ * second category would not open until the menu was dismissed), so no item
+ * in the submenu may carry a submenu of its own. */
+console.log("the right-click menu is one level with labelled sections");
+function menuDouble() {
+	const entries = [];
+	const menu = {
+		entries,
+		addSeparator() { entries.push({ kind: "separator" }); return menu; },
+		addItem(cb) {
+			const it = { kind: "item", title: null, label: false, disabled: false, sub: null, click: null };
+			const api = {
+				setTitle(t) { it.title = t; return api; },
+				setIcon() { return api; },
+				setIsLabel(v) { it.label = v; return api; },
+				setDisabled(v) { it.disabled = v; return api; },
+				onClick(fn) { it.click = fn; return api; },
+				setSubmenu() { it.sub = it.sub || menuDouble(); return it.sub; },
+			};
+			cb(api);
+			entries.push(it);
+			return menu;
+		},
+	};
+	return menu;
+}
+function openMenuOn(lineText) {
+	let handler = null;
+	const menuPlugin = Object.create(entry.prototype);
+	menuPlugin.manifest = { id: "nested-outline-numbering" };
+	menuPlugin.app = { workspace: { on: (name, fn) => { if (name === "editor-menu") handler = fn; return {}; } }, commands: { executeCommandById() {} } };
+	menuPlugin.registerEvent = () => {};
+	menuPlugin.commandList = [
+		"renumber-block", "insert-numbering", "remove-numbering", "clear-format", "normalize-outline", "ingest-outline",
+		"cut-item", "paste-item", "move-item-to-level",
+		"copy-clean-text", "save-clean-note", "copy-formatted", "copy-list",
+		"number-headings", "remove-heading-numbers", "continue-heading-numbering", "restart-heading-numbering",
+	].map((cid) => ({ id: cid, name: cid }));
+	menuPlugin.registerEditorMenu();
+	const root = menuDouble();
+	handler(root, { getValue: () => lineText, getCursor: () => ({ line: 0, ch: 0 }) });
+	return root;
+}
+const menuRoot = openMenuOn("1. item");
+const group = menuRoot.entries.find((e) => e.title === "Multilevel list section");
+check("the plugin adds one group to the editor menu", Boolean(group && group.sub), true);
+const inside = group.sub.entries;
+check("no item inside the group opens a further submenu", inside.filter((e) => e.sub).length, 0);
+check("the categories are labels, not clickable items", inside.filter((e) => e.label).map((e) => [e.title, e.disabled, e.click]), [
+	["Numbering", true, null],
+	["Moving items", true, null],
+	["Copying out", true, null],
+	["Headings", true, null],
+]);
+check("each category is set off by a separator", inside.filter((e) => e.kind === "separator").length, 3);
+check("every command away from a heading is one click away", inside.filter((e) => e.kind === "item" && !e.label && e.click).length, 15);
+const headingInside = openMenuOn("## 1 Scope").entries.find((e) => e.title === "Multilevel list section").sub.entries;
+check("on a heading the continue and restart commands appear", headingInside.filter((e) => /heading-numbering$/.test(e.title || "")).map((e) => e.title), [
+	"continue-heading-numbering",
+	"restart-heading-numbering",
+]);
+
 console.log("cut and paste as a subtree");
 const v3Cut = core.cutItem(["1. alpha", "  1.1. beta", "    1.1.1. gamma", "  1.2. delta"], 1);
 check("a cut takes the item and its subtree", v3Cut.taken, ["  1.1. beta", "    1.1.1. gamma"]);

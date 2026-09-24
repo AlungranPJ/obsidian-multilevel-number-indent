@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/AlungranPJ/obsidian-multilevel-number-indent?style=flat-square&label=release&labelColor=27272a&color=f97316)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/AlungranPJ/obsidian-multilevel-number-indent/ci.yml?style=flat-square&label=CI&labelColor=27272a)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-302_passing-f97316?style=flat-square&labelColor=27272a)](#development)
+[![Tests](https://img.shields.io/badge/tests-308_passing-f97316?style=flat-square&labelColor=27272a)](#development)
 [![License](https://img.shields.io/badge/license-MIT-52525b?style=flat-square&labelColor=27272a)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/AlungranPJ/obsidian-multilevel-number-indent/total?style=flat-square&label=downloads&labelColor=27272a&color=52525b)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/releases)
 
@@ -247,7 +247,7 @@ A heading normally starts a fresh list: the items under it count from `1.` again
 
 Each command is one editor transaction, so a single <kbd>Ctrl</kbd>+<kbd>Z</kbd> puts everything back.
 
-Right-click in the editor and every one of these is also under **Multilevel list section**, one labelled group of its own, sorted into four short categories: **Numbering**, **Moving items**, **Copying out** and **Headings**. The two heading commands ride along in **Headings**, and they only show up when the cursor is on a heading.
+Right-click in the editor and every one of these is also under **Multilevel list section**, one labelled group of its own, sorted under four small headings: **Numbering**, **Moving items**, **Copying out** and **Headings**. The headings are just labels inside that one submenu, so every command is one hover and one click away and you can slide straight from one category to the next. The two heading commands ride along in **Headings**, and they only show up when the cursor is on a heading.
 
 ![The right-click menu, with the plugin's commands under Multilevel list section](assets/context-menu.png)
 
@@ -286,7 +286,7 @@ npm ci
 npm run build
 ```
 
-The test file stubs `require("obsidian")` and `require("@codemirror/*")` so `main.js` loads in plain Node, then runs 302 assertions over the core: numbering, subtree moves, caret placement, code-fence handling, heading counters, the number templates and their round-trips, the Thai number styles, the level and depth policy settings, presets and their JSON, per-note frontmatter, normalize, smart paste, clean text, the HTML and RTF output, multi-line moves, cut and paste as a subtree, the indent guides and the status bar.
+The test file stubs `require("obsidian")` and `require("@codemirror/*")` so `main.js` loads in plain Node, then runs 308 assertions over the core: numbering, subtree moves, caret placement, code-fence handling, heading counters, the number templates and their round-trips, the Thai number styles, the level and depth policy settings, presets and their JSON, per-note frontmatter, normalize, smart paste, clean text, the HTML and RTF output, multi-line moves, cut and paste as a subtree, the right-click menu, the indent guides and the status bar.
 
 On top of that it builds the settings tab against small doubles for `Setting`, `PluginSettingTab`, `Modal` and the container element, and checks the rows, the buttons, the preview and the validation. The first block of the suite checks the shape Obsidian's loader needs (`module.exports`, `.default`, `prototype.onload`), so a broken export cannot slip through.
 
