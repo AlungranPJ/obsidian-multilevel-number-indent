@@ -19,7 +19,10 @@
 }
 
 /* Lines with four or more leading spaces are parsed as indented code blocks,
- * but these lines are outline items. Drop the code block look. */
+ * but these lines are outline items. Drop the code block look: its background
+ * tint and its top and bottom rules are the "strange lines" people see around
+ * a deeply indented item. Both spellings of the background class are listed,
+ * since the host has moved the class around between releases. */
 .markdown-source-view.mod-cm6 .cm-content .cm-line.multilevel-number-indent-line.HyperMD-codeblock {
 	padding-inline-start: 0;
 	font-family: var(--font-text);
@@ -28,9 +31,14 @@
 	direction: inherit;
 }
 
-.cm-s-obsidian div.cm-line.multilevel-number-indent-line.HyperMD-codeblock-bg {
+.cm-s-obsidian div.cm-line.multilevel-number-indent-line.HyperMD-codeblock-bg,
+.markdown-source-view.mod-cm6 .cm-content .cm-line.multilevel-number-indent-line.HyperMD-codeblock-bg,
+.markdown-source-view.mod-cm6 .cm-line.multilevel-number-indent-line.HyperMD-codeblock-bg {
 	background-color: transparent;
+	background-image: none;
 	border-width: 0;
+	border-color: transparent;
+	box-shadow: none;
 }
 
 /* Settings tab: live preview of the numbering the current templates produce. */

@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/AlungranPJ/obsidian-multilevel-number-indent?style=flat-square&label=release&labelColor=27272a&color=f97316)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/AlungranPJ/obsidian-multilevel-number-indent/ci.yml?style=flat-square&label=CI&labelColor=27272a)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-270_passing-f97316?style=flat-square&labelColor=27272a)](#development)
+[![Tests](https://img.shields.io/badge/tests-279_passing-f97316?style=flat-square&labelColor=27272a)](#development)
 [![License](https://img.shields.io/badge/license-MIT-52525b?style=flat-square&labelColor=27272a)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/AlungranPJ/obsidian-multilevel-number-indent/total?style=flat-square&label=downloads&labelColor=27272a&color=52525b)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/releases)
 
@@ -42,6 +42,15 @@ Press <kbd>Tab</kbd> and the item steps one level deeper, subtree and all. The n
 | **Headings run on the same engine** | `# 1 Introduction`, `## 1.1 Scope`, `#### 1) Point`. Same templates, same rules, same renumbering. |
 | **It stays in your vault** | No network calls, no telemetry, no dependencies at runtime, and no build step in the shipped file. |
 | **The releases are checkable** | Every asset is byte-compared against the committed file and carries a build provenance attestation. |
+
+<details>
+<summary><strong>What's new in 3.1.0</strong>: the right-click menu, and a list that can run on across a heading</summary>
+
+- **One labelled group in the right-click menu.** Every command sits under **Multilevel list section**, so they read as this plugin's instead of being scattered through the editor menu.
+- **Restart or continue the numbering at a heading**, the way Word does it. Right-click the heading and pick **Continue numbering past this heading** to keep the count running on, or **Restart numbering at this heading** to start again at `1.`. The choice is an HTML comment on the heading line, so it never shows in reading view or in an exported copy.
+- **Pasted numbers without a closing mark** (`1.1 text`, `1.1.1 text`) are taken off whole now, and the number itself says how deep the item sits, so a ragged indent cannot push an item down a level.
+- **No more stray rules around a deep item.** A four-space indent makes the host read the line as an indented code block, and that block's tint and its top and bottom rules were the odd lines people were seeing in the editor.
+</details>
 
 <details>
 <summary><strong>What's new in 3.0.0</strong> — the settings tab bends to the note, and the text that comes out is ready to use</summary>
@@ -189,6 +198,8 @@ Headings use the same templates with the closing period dropped: `# 1 Introducti
 
 Changing a heading level or moving a section renumbers the note automatically, but only **once the note is in numbered mode**, that is, once at least one heading carries a number. A note with no numbers is left alone, so <kbd>Tab</kbd> never starts numbering a document by surprise. `Number headings in note` turns the mode on, `Remove heading numbers` turns it off.
 
+A heading normally starts a fresh list: the items under it count from `1.` again. When you want the count to run on instead, the way Word lets a list continue across a heading, right-click the heading and pick **Continue numbering past this heading**. **Restart numbering at this heading** puts it back. The choice rides on the heading line as an HTML comment, so reading view and `Copy as clean text` never show it.
+
 ## Commands
 
 | Command | What it does |
@@ -203,12 +214,16 @@ Changing a heading level or moving a section renumbers the note automatically, b
 | `Cut the item with its subtree` | Take an item and everything under it out, ready to place |
 | `Paste the cut item here` | Put it back after the current item, at that item's level |
 | `Move the item to a level` | Ask for a level and move the item and its subtree there |
+| `Continue numbering past this heading` | Let the list run on across the heading instead of starting again at `1.` |
+| `Restart numbering at this heading` | Start a fresh count at `1.` under this heading |
 | `Copy as clean text` | The selection as prose, without any Markdown markers |
 | `Save the selection as a clean note` | The same, written to a new note |
 | `Copy as formatted text` | Rich text with the numbering kept |
 | `Copy as a real nested list` | Rich text as a nested list the target numbers itself |
 
 Each command is one editor transaction, so a single <kbd>Ctrl</kbd>+<kbd>Z</kbd> puts everything back.
+
+Right-click in the editor and every one of these is also under **Multilevel list section**, one labelled group of its own. The two heading commands ride along in there too, and they only show up when the cursor is on a heading.
 
 ## What this plugin touches
 

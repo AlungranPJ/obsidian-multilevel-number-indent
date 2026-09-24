@@ -765,6 +765,44 @@ check("a nested pasted list keeps its shape", core.ingestOutline("1. alpha\n   1
 	"  1.1. beta",
 	"  1.2. gamma",
 ]);
+check("a dotted path with no closing mark is taken off whole", core.ingestOutline("1. alpha\n 1.1 beta\n  1.1.1 gamma"), [
+	"1. alpha",
+	"  1.1. beta",
+	"    1.1.1. gamma",
+]);
+check("the number's own depth places the item", core.ingestOutline("1. a\n 1.1 b\n 1.1.1 c"), [
+	"1. a",
+	"  1.1. b",
+	"    1.1.1. c",
+]);
+check("a line that merely starts with a number stays prose", core.ingestOutline("1 alpha\n1. beta"), [
+	"1. 1 alpha",
+	"2. beta",
+]);
+
+console.log("restart and continue at a heading");
+check("a heading splits the count by default", core.headingContinuation(["1. alpha", "2. beta", "## Two", "1. gamma", "2. delta"], 2, false), {
+	lines: ["1. alpha", "2. beta", "## Two", "1. gamma", "2. delta"],
+	caretLine: 2,
+	caretCh: null,
+});
+check("continue runs the count on across a heading", core.headingContinuation(["1. alpha", "2. beta", "## Two", "1. gamma", "2. delta"], 2, true), {
+	lines: ["1. alpha", "2. beta", "## Two <!--mni:continue-->", "3. gamma", "4. delta"],
+	caretLine: 2,
+	caretCh: null,
+});
+check("the mark never shows in the heading text", core.parseHeading("## Two <!--mni:continue-->"), { level: 2, text: "Two" });
+check("continuing twice leaves one mark", core.headingContinuation(["1. alpha", "## Two <!--mni:continue-->", "2. beta"], 1, true), {
+	lines: ["1. alpha", "## Two <!--mni:continue-->", "2. beta"],
+	caretLine: 1,
+	caretCh: null,
+});
+check("restart takes the mark back off", core.headingContinuation(["## Two <!--mni:continue-->", "3. gamma"], 0, false), {
+	lines: ["## Two", "1. gamma"],
+	caretLine: 0,
+	caretCh: null,
+});
+check("a non-heading line is left alone", core.headingContinuation(["1. alpha"], 0, true), null);
 check("blank lines survive the paste", core.ingestOutline("• alpha\n\n• beta"), ["1. alpha", "", "2. beta"]);
 check("a plain list is still a list", core.ingestOutline("alpha\nbeta"), ["1. alpha", "2. beta"]);
 check("one line of prose is not a list", core.looksLikeOutline("just one line of text"), false);

@@ -367,6 +367,9 @@ function findBlock(lines, i) {
 
 function continuesBlock(line, minColumns) {
 	if (parseLine(line) || isBlank(line)) return true;
+	/* A heading marked "keep counting past me" bridges the run instead of
+	 * ending it, so the items below go on with the same count. */
+	if (CONTINUE_RE.test(line)) return true;
 	if (minColumns === null) return false;
 	const m = /^\s*/.exec(line);
 	return indentColumns(m ? m[0] : "") > minColumns;
@@ -659,12 +662,30 @@ function removeNumbering(lines, from, to) {
 
 const HEADING_RE = /^(#{1,6})\s+(.*)$/;
 const HEADING_NUMBER_RE = /^(\d+(?:\.\d+)*[.)]?)\s+/;
+/* A heading can say "keep counting past me" instead of starting a fresh list at
+ * 1, the way Word lets a list run on across a heading. The mark is an HTML
+ * comment, so reading view and a clean export never see it. */
+const CONTINUE_MARK = "<!--mni:continue-->";
+const CONTINUE_RE = /\s*<!--\s*mni:continue\s*-->$/i;
 
-/** Parses an ATX heading line, or returns null when the line is not one. */
+/** Parses an ATX heading line, or returns null when the line is not one. The
+ *  numbering mark is kept out of the title text. */
 function parseHeading(line) {
 	const m = HEADING_RE.exec(line);
 	if (!m) return null;
-	return { level: m[1].length, text: m[2] };
+	return { level: m[1].length, text: m[2].replace(CONTINUE_RE, "") };
+}
+
+/** Rewrites the heading at `l` to keep counting past it, or to start a fresh
+ *  list, and renumbers the two blocks the change can reach. */
+function headingContinuation(lines, l, on) {
+	const target = lines[l] === undefined ? "" : lines[l];
+	if (parseHeading(target) === null) return null;
+	const out = lines.slice();
+	const bare = target.replace(CONTINUE_RE, "").replace(/\s+$/, "");
+	out[l] = on ? bare + " " + CONTINUE_MARK : bare;
+	renumberRange(out, Math.max(0, l - 1), Math.min(out.length - 1, l + 1));
+	return { lines: out, caretLine: l, caretCh: null };
 }
 
 function stripHeadingNumber(text) {
@@ -1015,15 +1036,30 @@ function normalizeOutline(lines, from, to) {
  * a chat. Nothing outside these lines is touched. */
 const BULLET_RE = /^(\s*)[•‣◦▪·∙○●\-\u2013\u2014*+>]\s+(.*)$/;
 const COUNTED_RE = /^(\s*)(?:\((?:[0-9]+|[a-zA-Z]|[IVXLCDMivxlcdm]|[ก-ฮ]|[๐-๙])\)|(?:[0-9]+(?:\.[0-9]+)*|[a-zA-Z]|[IVXLCDMivxlcdm]|[ก-ฮ]|[๐-๙]+)[.):])\s*(.*)$/;
+/* Word, Docs and chat clients write `1.1.1 text` with no closing mark. Two
+ * segments or more and a space after the number is enough to call it a marker,
+ * and then the number itself says how deep the item sits. One segment still
+ * needs its closing mark, so a line that merely starts with `1` stays prose. */
+const PATH_RE = /^(\s*)([0-9]+(?:\.[0-9]+)+)[.):]?\s+(.*)$/;
 
 /** One line as it would be numbered: its depth, its text, and whether a
- *  foreign marker had to be taken off first. */
+ *  foreign marker had to be taken off first. A dotted path carries its own
+ *  depth in its segments; anything else is placed by the indent. */
 function stripMarker(row) {
 	if (isBlank(row)) return null;
 	const indent = /^(\s*)/.exec(row)[1];
+	const path = PATH_RE.exec(row);
+	if (path) {
+		return {
+			columns: indentColumns(path[1]),
+			content: path[3],
+			marked: true,
+			depth: path[2].split(".").length - 1,
+		};
+	}
 	const hit = BULLET_RE.exec(row) || COUNTED_RE.exec(row);
-	if (hit) return { columns: indentColumns(hit[1]), content: hit[2], marked: true };
-	return { columns: indentColumns(indent), content: row.slice(indent.length), marked: false };
+	if (hit) return { columns: indentColumns(hit[1]), content: hit[2], marked: true, depth: null };
+	return { columns: indentColumns(indent), content: row.slice(indent.length), marked: false, depth: null };
 }
 
 /** The smallest indent step in the text, so a 3-space or a tab outline still
@@ -1055,7 +1091,11 @@ function ingestOutline(text) {
 			out.push(rows[i]);
 			continue;
 		}
-		const depth = Math.max(0, Math.min(MAX_LEVELS - 1, Math.round((item.columns - base) / unit)));
+		/* A dotted path already knows its depth from its segments, so a drifted
+		 * indent cannot push it down a level. Everything else is placed by the
+		 * indent, rounded to the nearest step so a ragged indent still lands. */
+		const raw = item.depth === null ? Math.round((item.columns - base) / unit) : item.depth;
+		const depth = Math.max(0, Math.min(MAX_LEVELS - 1, raw));
 		out.push(CONFIG.indent.repeat(depth) + "0. " + item.content);
 	}
 	renumberRange(out, 0, out.length - 1);
@@ -1491,6 +1531,7 @@ const CORE = {
 	cutItem,
 	pasteItem,
 	setLevel,
+	headingContinuation,
 	guideStyle,
 	statusFor,
 	STYLES,
@@ -1592,8 +1633,19 @@ class MultilevelNumberIndent extends Plugin {
 			name: "Remove heading numbers",
 			editorCallback: (editor) => this.runWholeNote(editor, removeHeadingNumbers),
 		});
+		this.addCommand({
+			id: "continue-heading-numbering",
+			name: "Continue numbering past this heading",
+			editorCheckCallback: (checking, editor) => this.runHeadingContinuation(editor, checking, true),
+		});
+		this.addCommand({
+			id: "restart-heading-numbering",
+			name: "Restart numbering at this heading",
+			editorCheckCallback: (checking, editor) => this.runHeadingContinuation(editor, checking, false),
+		});
 
 		this.addSettingTab(new MultilevelNumberIndentSettingTab(this.app, this));
+		this.registerEditorMenu();
 	}
 
 	async loadSettings() {
@@ -1643,6 +1695,51 @@ class MultilevelNumberIndent extends Plugin {
 		}
 		const editor = view.editor;
 		this.statusEl.textContent = statusFor(editor.getValue().split("\n"), editor.getCursor().line);
+	}
+
+	/** Records every command as it registers, so the right-click menu can list
+	 *  them all without keeping a second copy of the names. */
+	addCommand(spec) {
+		if (!this.commandList) this.commandList = [];
+		this.commandList.push({ id: spec.id, name: spec.name });
+		return super.addCommand(spec);
+	}
+
+	/** "Keep counting past this heading", or "start a fresh list at 1 here". */
+	runHeadingContinuation(editor, checking, on) {
+		const text = editor.getValue();
+		const line = editor.getCursor().line;
+		if (parseHeading(text.split("\n")[line] || "") === null) return false;
+		if (checking) return true;
+		const result = headingContinuation(text.split("\n"), line, on);
+		if (result) this.applyResult(editor, text, result);
+		return true;
+	}
+
+	/**
+	 * One labelled group in the editor's right-click menu. The two heading
+	 * commands light up on a heading and stay grey everywhere else.
+	 */
+	registerEditorMenu() {
+		this.registerEvent(
+			this.app.workspace.on("editor-menu", (menu, editor) => {
+				menu.addItem((item) => {
+					item.setTitle("Multilevel list section").setIcon("list-ordered");
+					const sub = typeof item.setSubmenu === "function" ? item.setSubmenu() : null;
+					const target = sub || menu;
+					for (const cmd of this.commandList || []) {
+						const isHeadingAction = cmd.id === "continue-heading-numbering" || cmd.id === "restart-heading-numbering";
+						const text = editor.getValue().split("\n")[editor.getCursor().line] || "";
+						if (isHeadingAction && parseHeading(text) === null) continue;
+						target.addItem((entry) =>
+							entry.setTitle(cmd.name).onClick(() => {
+								this.app.commands.executeCommandById(this.manifest.id + ":" + cmd.id);
+							})
+						);
+					}
+				});
+			})
+		);
 	}
 
 	/**
