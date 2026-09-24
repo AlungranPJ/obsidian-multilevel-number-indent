@@ -1081,6 +1081,14 @@ check("one guide per item with sub-items, on the last digit", core.guideSpans(gu
 check("a flat list draws no guides", core.guideSpans(["1. a", "2. b", "3. c"]), []);
 check("a bracket number hangs on its digit", core.guideSpans(["1. a", "  1.1. b", "    1) c", "      1.1) d"])[2], { line: 2, ch: 4, end: 3 });
 check("a code fence draws no guide", core.guideSpans(["```", "1. a", "  1.1. b", "```"]), []);
+/* The x of a guide, in pixels: on the digit when the children start further
+ * right, slid left to just before their text when a long number reaches past
+ * it, and never left of where its own number starts. */
+check("room to spare: the guide sits on the digit", core.guideX(100, [120, 140], 60, 4), 100);
+check("a long number: the guide slides to just before the child text", core.guideX(130, [112, 150], 60, 4), 108);
+check("the tightest child sets the limit", core.guideX(130, [150, 118, 112], 60, 4), 108);
+check("never left of its own number", core.guideX(130, [62], 60, 4), 60);
+check("blank children do not count", core.guideX(100, [null, undefined], 60, 4), 100);
 check("the last digit of a dotted number sets the column", core.lastNumberIndex("5.1.1."), 4);
 check("a closing mark is not a number", core.lastNumberIndex("1)"), 0);
 check("a Thai digit counts too", core.lastNumberIndex("\u0e02\u0e49\u0e2d \u0e51."), 4);

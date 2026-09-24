@@ -1474,6 +1474,24 @@ function guideSpans(lines) {
 	return out;
 }
 
+/** Pixels kept clear between a guide and the text it runs past. */
+const GUIDE_GAP = 4;
+
+/**
+ * Where one guide actually goes, in pixels. It hangs on the last digit when
+ * there is room; when a long number reaches past where its children's text
+ * starts (`1.1.1)` over a one-tab indent), it slides left to sit just before
+ * that text instead of cutting through it. It never slides left of the start
+ * of its own number. The text itself is never moved.
+ */
+function guideX(digitX, childTextXs, ownStartX, gap) {
+	const room = childTextXs.filter((x) => typeof x === "number" && Number.isFinite(x));
+	if (room.length === 0) return digitX;
+	const limit = Math.min(...room) - (typeof gap === "number" ? gap : GUIDE_GAP);
+	const x = Math.min(digitX, limit);
+	return typeof ownStartX === "number" ? Math.max(ownStartX, x) : x;
+}
+
 /** What the status bar shows for the cursor's line: its level and its number. */
 function statusFor(lines, line) {
 	const target = lines[line];
@@ -1601,6 +1619,7 @@ const CORE = {
 	setLevel,
 	headingContinuation,
 	guideSpans,
+	guideX,
 	lastNumberIndex,
 	statusFor,
 	STYLES,
@@ -2214,6 +2233,21 @@ function guideMarkers(view) {
 	const baseLeft = rect.left - view.scrollDOM.scrollLeft;
 	const baseTop = rect.top - view.scrollDOM.scrollTop;
 	const markers = [];
+	/* Where each visible line's text starts, measured once and shared by
+	 * every guide that runs past it. */
+	const textStart = new Map();
+	const startOf = (i) => {
+		if (textStart.has(i)) return textStart.get(i);
+		let x = null;
+		const line = doc.line(i + 1);
+		const lead = /^\s*/.exec(line.text)[0].length;
+		if (lead < line.length) {
+			const c = view.coordsAtPos(line.from + lead, 1);
+			if (c) x = c.left;
+		}
+		textStart.set(i, x);
+		return x;
+	};
 	for (const span of guideSpans(doc.toString().split("\n"))) {
 		if (span.end < first || span.line > last) continue;
 		const line = doc.line(span.line + 1);
@@ -2221,7 +2255,10 @@ function guideMarkers(view) {
 		const before = view.coordsAtPos(pos, 1);
 		const after = view.coordsAtPos(pos + 1, -1);
 		if (!before) continue;
-		const x = after && after.top === before.top ? (before.left + after.left) / 2 : before.left;
+		const digit = after && after.top === before.top ? (before.left + after.left) / 2 : before.left;
+		const children = [];
+		for (let i = Math.max(span.line + 1, first); i <= Math.min(span.end, last); i++) children.push(startOf(i));
+		const x = guideX(digit, children, startOf(span.line), GUIDE_GAP);
 		const top = view.lineBlockAt(line.from).bottom + view.documentTop - baseTop;
 		const end = doc.line(Math.min(span.end, last) + 1);
 		const bottom = view.lineBlockAt(end.from).bottom + view.documentTop - baseTop;

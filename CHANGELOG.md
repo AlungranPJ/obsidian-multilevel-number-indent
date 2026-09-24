@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.3.6
+
+The guides step out of the way of the text.
+
+- **A guide no longer cuts through a line.** A guide hangs on the last digit of its number, but a long number such as `1.1.1)` or `1.1.` over a one-tab indent reaches further right than where its children's text starts, so the rule ran straight through the first letters of the line below. Now each guide checks where the text of every line it passes begins, and when the digit is too far right it slides left to sit just before that text, with a few pixels clear. It never slides left of the start of its own number. The text itself is not moved, so nothing in the note changes.
+- Measured in the app on a real note: every guide now keeps at least 3.5 px clear of the text it runs past, where two of them used to overlap it by up to 12 px.
+- Five new tests for where a guide lands.
+
 ## 3.3.5
 
 The right-click menu, fixed so you can actually move around in it.
