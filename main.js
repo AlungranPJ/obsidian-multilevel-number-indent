@@ -658,6 +658,39 @@ function removeNumbering(lines, from, to) {
 	return changed ? out : null;
 }
 
+/**
+ * The clear-format move: the number comes off the front of every line, and off
+ * every heading, while the indentation is left exactly as it was so the text can
+ * be laid out again by hand. Any numbering style goes, not only this plugin's,
+ * and bullets go with it. A blockquote marker is content, so that stays.
+ */
+function clearFormatting(lines, from, to) {
+	const mask = fenceMask(lines);
+	const out = lines.slice();
+	let changed = false;
+	for (let i = Math.max(0, from); i <= Math.min(lines.length - 1, to); i++) {
+		if (mask[i] || isBlank(out[i])) continue;
+		const line = out[i];
+		if (parseHeading(line)) {
+			const m = /^(#{1,6}\s+)(.*)$/.exec(line);
+			const stripped = stripHeadingNumber(m[2]);
+			if (stripped !== m[2]) {
+				out[i] = m[1] + stripped;
+				changed = true;
+			}
+			continue;
+		}
+		const p = parseLine(line);
+		const marked = stripMarker(line);
+		if (!p && (!marked || !marked.marked)) continue;
+		const indent = /^(\s*)/.exec(line)[1];
+		if (line.slice(indent.length).startsWith(">")) continue;
+		out[i] = indent + (p ? p.content : marked.content);
+		changed = true;
+	}
+	return changed ? out : null;
+}
+
 /* ------------------------------ headings ------------------------------ */
 
 const HEADING_RE = /^(#{1,6})\s+(.*)$/;
@@ -1562,6 +1595,7 @@ const CORE = {
 	moveItem,
 	insertNumbering,
 	removeNumbering,
+	clearFormatting,
 	parseHeading,
 	stripHeadingNumber,
 	headingsAreNumbered,
@@ -1622,6 +1656,11 @@ class MultilevelNumberIndent extends Plugin {
 			id: "remove-numbering",
 			name: "Remove multilevel numbering",
 			editorCallback: (editor) => this.runRange(editor, removeNumbering, "remove"),
+		});
+		this.addCommand({
+			id: "clear-format",
+			name: "Clear list markers and keep the indent",
+			editorCallback: (editor) => this.runRange(editor, clearFormatting, "clear"),
 		});
 		this.addCommand({
 			id: "number-headings",

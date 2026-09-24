@@ -414,6 +414,20 @@ check("insert turns an indented outline into numbering", numbered, [
 check("remove strips the numbers again", core.removeNumbering(numbered, 0, 3), outline);
 check("insert ignores a line that already has a number", core.insertNumbering(["1. a"], 0, 0), null);
 
+console.log("clearFormatting");
+const foreign = ["1.1 alpha", "    1.1.1) beta", "      - gamma", "      > a quote", "## 1.2. Title"];
+check("clear takes every number off and keeps the indent", core.clearFormatting(foreign, 0, 4), [
+	"alpha",
+	"    beta",
+	"      gamma",
+	"      > a quote",
+	"## Title",
+]);
+check("clear keeps the indent of a deep item", core.clearFormatting(["    1.1. deep"], 0, 0), ["    deep"]);
+check("clear takes a bullet but not a blockquote", core.clearFormatting(["- one", "> two"], 0, 1), ["one", "> two"]);
+check("clear leaves prose alone", core.clearFormatting(["plain words"], 0, 0), null);
+check("clear takes the number off a heading", core.clearFormatting(["# 2026 Report"], 0, 0), ["# Report"]);
+
 /* ------------------------------ headings ------------------------------ */
 
 console.log("parseHeading");

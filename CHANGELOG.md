@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.2.0
+
+A small release with one new move in it, and the pasting rules written down at last.
+
+- **`Clear list markers and keep the indent`** is the clear-format move. Numbers and bullets come off the front of the lines, numbers come off the headings, and the indentation is left exactly as it was, so the text can be laid out again by hand. Any numbering style goes, including `1.1 text` and `1.1.1)` the way Word and chat clients write them. A blockquote marker is content, so it stays put.
+- **Smart placement is documented now**, in the README and the Thai guide: a dotted number carries its own depth in its segments, so `1.1 text` lands at level 2 whatever the indent says, and only a line that merely starts with `1` is placed by its indent like everything else.
+- The README now carries a picture of the right-click menu with the **Multilevel list section** group open.
+
 ## 3.1.0
 
 This release is about where the commands live, and where a list starts.

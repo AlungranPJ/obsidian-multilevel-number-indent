@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/AlungranPJ/obsidian-multilevel-number-indent?style=flat-square&label=release&labelColor=27272a&color=f97316)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/AlungranPJ/obsidian-multilevel-number-indent/ci.yml?style=flat-square&label=CI&labelColor=27272a)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-279_passing-f97316?style=flat-square&labelColor=27272a)](#development)
+[![Tests](https://img.shields.io/badge/tests-284_passing-f97316?style=flat-square&labelColor=27272a)](#development)
 [![License](https://img.shields.io/badge/license-MIT-52525b?style=flat-square&labelColor=27272a)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/AlungranPJ/obsidian-multilevel-number-indent/total?style=flat-square&label=downloads&labelColor=27272a&color=52525b)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/releases)
 
@@ -42,6 +42,14 @@ Press <kbd>Tab</kbd> and the item steps one level deeper, subtree and all. The n
 | **Headings run on the same engine** | `# 1 Introduction`, `## 1.1 Scope`, `#### 1) Point`. Same templates, same rules, same renumbering. |
 | **It stays in your vault** | No network calls, no telemetry, no dependencies at runtime, and no build step in the shipped file. |
 | **The releases are checkable** | Every asset is byte-compared against the committed file and carries a build provenance attestation. |
+
+<details>
+<summary><strong>What's new in 3.2.0</strong>: the clear-format move, and the pasting rules written down</summary>
+
+- **`Clear list markers and keep the indent`** is the clear-format move: numbers and bullets come off the front of the lines, numbers come off the headings, and the indentation is left exactly as it was, so you can lay the text out again by hand. Any numbering style goes, `1.1 text` included. Blockquotes are content and stay put.
+- **Smart placement, written down.** A pasted number carries its own depth in its segments: `1.1 text` lands at level 2 and `1.1.1 text` at level 3, whatever the indent in front of it says. That is what `Turn the selection into a numbered outline` does, and it is spelled out under [Smart placement](#smart-placement).
+- **A picture of the right-click menu**, with the **Multilevel list section** group open, so the menu is easy to find the first time.
+</details>
 
 <details>
 <summary><strong>What's new in 3.1.0</strong>: the right-click menu, and a list that can run on across a heading</summary>
@@ -192,6 +200,14 @@ The numbering is only half the job. What matters is the text that comes out.
 
 **Format pasted lists** in the settings tab does that first conversion automatically on <kbd>Ctrl</kbd>+<kbd>V</kbd>. It ships switched off, and it only fires on text that really looks like a list.
 
+### Smart placement
+
+When a list comes in from Word, a web page or a chat, the numbers usually know more than the indents do. So the number says how deep the item goes: `1.1 text` is level 2 and `1.1.1 text` is level 3, whatever indentation sits in front of it. Only a dotted number gets that say (`1.1`, `1.1.1`, `1.1.1)`); a line that merely starts with `1` is prose and is placed by its indent like everything else. A drifted indent therefore cannot push an item down a level, and a ragged outline comes out level.
+
+It is the same move through either door: `Turn the selection into a numbered outline` on a selection, or <kbd>Ctrl</kbd>+<kbd>V</kbd> with **Format pasted lists** switched on. Right-click the text and it is in the menu too, under **Multilevel list section**. That is the whole thing: select the lines, right-click, pick the command, and the list lays itself out.
+
+The smallest indent step in the text decides what one level is worth, so a three-space or a tab outline still comes out one level per step. And the numbers are counted, never copied: `1.2.4` written under `1.2.1` comes out `1.2.2`, because the count always follows the real depth.
+
 ## Heading numbering
 
 Headings use the same templates with the closing period dropped: `# 1 Introduction`, `## 1.1 Scope`, `### 1.1.1 Detail`. From level 4 they follow the plain-text rule and end with a bracket: `#### 1) Point`, `##### 1.1) Detail`.
@@ -209,6 +225,7 @@ A heading normally starts a fresh list: the items under it count from `1.` again
 | `Renumber multilevel block` | Recompute the plain-text numbers from the real indentation |
 | `Insert multilevel numbering` | Turn a space-indented outline into a numbered one |
 | `Remove multilevel numbering` | Strip the plain-text numbers, keeping the indentation |
+| `Clear list markers and keep the indent` | The clear-format move: numbers and bullets of any style off the lines, numbers off the headings too, the indentation left exactly as it was |
 | `Normalize the outline` | Put a drifted outline back into shape and renumber it |
 | `Turn the selection into a numbered outline` | Convert pasted bullets and foreign numbers |
 | `Cut the item with its subtree` | Take an item and everything under it out, ready to place |
@@ -224,6 +241,8 @@ A heading normally starts a fresh list: the items under it count from `1.` again
 Each command is one editor transaction, so a single <kbd>Ctrl</kbd>+<kbd>Z</kbd> puts everything back.
 
 Right-click in the editor and every one of these is also under **Multilevel list section**, one labelled group of its own. The two heading commands ride along in there too, and they only show up when the cursor is on a heading.
+
+![The right-click menu, with the plugin's commands under Multilevel list section](assets/context-menu.png)
 
 ## What this plugin touches
 
@@ -260,7 +279,7 @@ npm ci
 npm run build
 ```
 
-The test file stubs `require("obsidian")` and `require("@codemirror/*")` so `main.js` loads in plain Node, then runs 270 assertions over the core: numbering, subtree moves, caret placement, code-fence handling, heading counters, the number templates and their round-trips, the Thai number styles, the level and depth policy settings, presets and their JSON, per-note frontmatter, normalize, smart paste, clean text, the HTML and RTF output, multi-line moves, cut and paste as a subtree, the indent guides and the status bar.
+The test file stubs `require("obsidian")` and `require("@codemirror/*")` so `main.js` loads in plain Node, then runs 284 assertions over the core: numbering, subtree moves, caret placement, code-fence handling, heading counters, the number templates and their round-trips, the Thai number styles, the level and depth policy settings, presets and their JSON, per-note frontmatter, normalize, smart paste, clean text, the HTML and RTF output, multi-line moves, cut and paste as a subtree, the indent guides and the status bar.
 
 On top of that it builds the settings tab against small doubles for `Setting`, `PluginSettingTab`, `Modal` and the container element, and checks the rows, the buttons, the preview and the validation. The first block of the suite checks the shape Obsidian's loader needs (`module.exports`, `.default`, `prototype.onload`), so a broken export cannot slip through.
 
