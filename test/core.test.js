@@ -887,9 +887,15 @@ check("moving to a level moves the subtree", v3Levelled.lines, ["1. alpha", "  1
 check("an item already at that level is left alone", core.setLevel(["1. alpha"], 0, 0), null);
 
 console.log("indent guide and status bar");
-check("the guide draws one rule at the number", core.guideStyle(4).includes("4ch"), true);
-check("the rule is one line, not a fan", core.guideStyle(4).split("linear-gradient").length, 2);
-check("a line with no column draws nothing", core.guideStyle(-1), "");
+const guideNote = ["5. top", "  5.1. mid", "    5.1.1. deep", "      body under deep", "    5.1.2. leaf", "6. flat"];
+check("one guide per item with sub-items, on the last digit", core.guideSpans(guideNote), [
+	{ line: 0, ch: 0, end: 4 },
+	{ line: 1, ch: 4, end: 4 },
+	{ line: 2, ch: 8, end: 3 },
+]);
+check("a flat list draws no guides", core.guideSpans(["1. a", "2. b", "3. c"]), []);
+check("a bracket number hangs on its digit", core.guideSpans(["1. a", "  1.1. b", "    1) c", "      1.1) d"])[2], { line: 2, ch: 4, end: 3 });
+check("a code fence draws no guide", core.guideSpans(["```", "1. a", "  1.1. b", "```"]), []);
 check("the last digit of a dotted number sets the column", core.lastNumberIndex("5.1.1."), 4);
 check("a closing mark is not a number", core.lastNumberIndex("1)"), 0);
 check("a Thai digit counts too", core.lastNumberIndex("\u0e02\u0e49\u0e2d \u0e51."), 4);

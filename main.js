@@ -27,7 +27,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports -- require() is the only way to reach the host modules in a CommonJS Obsidian plugin */
 const { Plugin, PluginSettingTab, Setting, MarkdownView, Modal, ButtonComponent, editorInfoField } = require("obsidian");
 const { Prec } = require("@codemirror/state");
-const { keymap, Decoration, ViewPlugin } = require("@codemirror/view");
+const { keymap, Decoration, ViewPlugin, layer, RectangleMarker } = require("@codemirror/view");
 /* eslint-enable @typescript-eslint/no-require-imports -- the host modules are imported, nothing else below needs the exception */
 
 /* ================================ CORE ================================ */
@@ -1431,25 +1431,26 @@ function lastNumberIndex(number) {
 }
 
 /**
- * The background that draws the one vertical rule a numbered line gets, aligned
- * with the last digit of its own number. One line, one rule, instead of a fan of
- * rules across the indent steps. The column is counted in `ch`, so it tracks the
- * editor font instead of guessing pixel widths.
+ * Where the guides go: one per numbered item that has something under it, hung
+ * on the last digit of its own number and running down to the last line of its
+ * subtree. `ch` is the offset of that digit inside the line, so the editor can
+ * measure the real pixel position whatever the font is. An item with nothing
+ * under it draws nothing, so a flat list stays clean.
  */
-function guideStyle(column) {
-	if (column < 0) return "";
-	const at = column + "ch";
-	return (
-		"background-image:linear-gradient(90deg,transparent 0 calc(" +
-		at +
-		"),var(--mni-guide,rgba(127,127,140,0.35)) calc(" +
-		at +
-		") calc(" +
-		at +
-		" + 1px),transparent calc(" +
-		at +
-		" + 1px));background-repeat:no-repeat"
-	);
+function guideSpans(lines) {
+	const mask = fenceMask(lines);
+	const out = [];
+	for (let i = 0; i < lines.length; i++) {
+		if (mask[i]) continue;
+		const p = parseLine(lines[i]);
+		if (!p) continue;
+		const sub = subtreeRange(lines, i, mask);
+		if (sub.end <= i) continue;
+		const digit = lastNumberIndex(p.number);
+		if (digit < 0) continue;
+		out.push({ line: i, ch: p.indent.length + digit, end: sub.end });
+	}
+	return out;
 }
 
 /** What the status bar shows for the cursor's line: its level and its number. */
@@ -1578,7 +1579,7 @@ const CORE = {
 	pasteItem,
 	setLevel,
 	headingContinuation,
-	guideStyle,
+	guideSpans,
 	lastNumberIndex,
 	statusFor,
 	STYLES,
@@ -1631,6 +1632,8 @@ const CORE = {
 class MultilevelNumberIndent extends Plugin {
 	async onload() {
 		await this.loadSettings();
+		this.syncGuideClass();
+		this.register(() => this.syncGuideClass(false));
 
 		const handler = (ev) => this.handleKeydown(ev);
 		document.addEventListener("keydown", handler, true);
@@ -1649,6 +1652,7 @@ class MultilevelNumberIndent extends Plugin {
 		);
 
 		this.registerEditorExtension(numberingLineDecorations);
+		this.registerEditorExtension(guideLayer);
 		this.addFormatCommands();
 		this.registerPasteHook();
 		this.registerStatus();
@@ -1710,6 +1714,15 @@ class MultilevelNumberIndent extends Plugin {
 	async saveSettings() {
 		Object.assign(this.settings, setConfig(this.settings));
 		await this.saveData(this.settings);
+		this.syncGuideClass();
+	}
+
+	/** While this plugin draws its guides, the host's per-step indentation
+	 *  guides are hidden on numbered lines, so each item shows one rule. */
+	syncGuideClass(on) {
+		if (typeof document === "undefined" || !document.body) return;
+		const want = on === undefined ? Boolean(this.settings && this.settings.indentGuides) : on;
+		document.body.classList.toggle("multilevel-number-indent-guides-on", want);
 	}
 
 	/**
@@ -2130,17 +2143,7 @@ function buildDecorations(view) {
 			const line = view.state.doc.lineAt(pos);
 			const index = line.number - 1;
 			const p = mask[index] ? null : parseLine(line.text);
-			if (p) {
-				/* One rule per numbered line, drawn as a background so the text
-				 * itself is never touched and copy and paste stay clean. */
-				const column = indentColumns(p.indent) + Math.max(0, lastNumberIndex(p.number));
-				const style = CONFIG.indentGuides ? guideStyle(column) : "";
-				builder.add(
-					line.from,
-					line.from,
-					style.length > 0 ? Decoration.line({ class: "multilevel-number-indent-line", attributes: { style } }) : numberingLine
-				);
-			}
+			if (p) builder.add(line.from, line.from, numberingLine);
 			if (line.to >= range.to) break;
 			pos = line.to + 1;
 		}
@@ -2149,6 +2152,51 @@ function buildDecorations(view) {
 }
 
 const numberingLine = Decoration.line({ class: "multilevel-number-indent-line" });
+
+/**
+ * The guides, drawn on their own layer so the text is never touched. Each one
+ * is measured from the editor itself: the x of the digit it hangs on, and the
+ * top and bottom of the lines it spans. That keeps it on the digit with Thai
+ * text, proportional fonts and wrapped lines, where counting columns drifts.
+ */
+function guideMarkers(view) {
+	if (!CONFIG.indentGuides) return [];
+	const doc = view.state.doc;
+	const first = doc.lineAt(view.viewport.from).number - 1;
+	const last = doc.lineAt(view.viewport.to).number - 1;
+	const rect = view.scrollDOM.getBoundingClientRect();
+	const baseLeft = rect.left - view.scrollDOM.scrollLeft;
+	const baseTop = rect.top - view.scrollDOM.scrollTop;
+	const markers = [];
+	for (const span of guideSpans(doc.toString().split("\n"))) {
+		if (span.end < first || span.line > last) continue;
+		const line = doc.line(span.line + 1);
+		const pos = line.from + span.ch;
+		const before = view.coordsAtPos(pos, 1);
+		const after = view.coordsAtPos(pos + 1, -1);
+		if (!before) continue;
+		const x = after && after.top === before.top ? (before.left + after.left) / 2 : before.left;
+		const top = view.lineBlockAt(line.from).bottom + view.documentTop - baseTop;
+		const end = doc.line(Math.min(span.end, last) + 1);
+		const bottom = view.lineBlockAt(end.from).bottom + view.documentTop - baseTop;
+		if (bottom - top < 1) continue;
+		markers.push(new RectangleMarker("multilevel-number-indent-guide", Math.round(x - baseLeft), top, null, bottom - top));
+	}
+	return markers;
+}
+
+/* The layer API ships with every host this plugin supports. The guard keeps
+ * the plugin loading, without guides, if a host ever lacks it. */
+const guideLayer =
+	typeof layer === "function" && typeof RectangleMarker === "function"
+		? layer({
+				above: true,
+				class: "multilevel-number-indent-guides",
+				update: (update) =>
+					update.docChanged || update.viewportChanged || update.geometryChanged || update.transactions.some((tr) => tr.reconfigured),
+				markers: (view) => guideMarkers(view),
+			})
+		: [];
 
 /** Tiny ordered range builder, avoids importing RangeSetBuilder. */
 class RangeSetBuilderLike {
@@ -2224,11 +2272,13 @@ class MultilevelNumberIndentSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Indent guides")
-			.setDesc("Draw one faint rule per level in front of an item. It is background only, so the text and the clipboard are never touched.")
+			.setDesc("Draw one faint rule under the last digit of an item that has sub-items, down to its last sub-item. It is drawn on its own layer, so the text and the clipboard are never touched.")
 			.addToggle((toggle) =>
 				toggle.setValue(Boolean(this.plugin.settings.indentGuides)).onChange(async (value) => {
 					this.plugin.settings.indentGuides = value;
 					await this.plugin.saveSettings();
+					const workspace = this.app && this.app.workspace;
+					if (workspace && typeof workspace.updateOptions === "function") workspace.updateOptions();
 				})
 			);
 

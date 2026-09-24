@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/AlungranPJ/obsidian-multilevel-number-indent?style=flat-square&label=release&labelColor=27272a&color=f97316)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/AlungranPJ/obsidian-multilevel-number-indent/ci.yml?style=flat-square&label=CI&labelColor=27272a)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-287_passing-f97316?style=flat-square&labelColor=27272a)](#development)
+[![Tests](https://img.shields.io/badge/tests-288_passing-f97316?style=flat-square&labelColor=27272a)](#development)
 [![License](https://img.shields.io/badge/license-MIT-52525b?style=flat-square&labelColor=27272a)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/AlungranPJ/obsidian-multilevel-number-indent/total?style=flat-square&label=downloads&labelColor=27272a&color=52525b)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/releases)
 
@@ -46,7 +46,7 @@ Press <kbd>Tab</kbd> and the item steps one level deeper, subtree and all. The n
 <details>
 <summary><strong>What's new in 3.3.0</strong>: one quiet rule per line, and a menu that scans</summary>
 
-- **One rule per numbered line, on its number.** The indent guides used to draw a rule per indent step, which left a fan of lines in the margin next to a deep item. Each numbered line now draws exactly one faint rule, aligned with the last digit of the number it shows: `5.1.1.` hangs its rule on the final `1`. Switch the guides off in the settings tab whenever you like.
+- **One rule per item, on its number.** The margin used to show a rule at every indent step, a fan of lines next to a deep item. Now an item with sub-items draws exactly one faint rule, measured from the editor so it sits under the last digit of its own number (`5.1.1.` hangs on the final `1`) and runs down to its last sub-item. Obsidian's own per-step guides step aside on numbered lines while this is on. Switch it off in the settings tab whenever you like.
 - **The right-click menu is sorted into categories** under **Multilevel list section**: **Numbering**, **Moving items**, **Copying out** and **Headings**. Fifteen items in one column became four short lists.
 </details>
 
@@ -186,7 +186,7 @@ Everything lives in one tab, **Settings → Multilevel Number Indent**.
 | **Indent per level** | Two spaces, four spaces, or one tab |
 | **Deeper than the last level** | Reuse the last level, or leave the line as text |
 | **Format pasted lists** | Converts pasted lists on <kbd>Ctrl</kbd>+<kbd>V</kbd>. Ships switched off |
-| **Indent guides** | One faint rule per numbered line, aligned with the last digit of its number, drawn as a background |
+| **Indent guides** | One faint rule per item with sub-items, under the last digit of its number and down to its last sub-item. Obsidian's own guides step aside on numbered lines while it is on |
 | **Number format** | One template per level, with **Add level** and **Remove**, and a live preview |
 | **Presets** | Six built in, save your own, and **Preset JSON** to move the set between machines |
 
@@ -286,7 +286,7 @@ npm ci
 npm run build
 ```
 
-The test file stubs `require("obsidian")` and `require("@codemirror/*")` so `main.js` loads in plain Node, then runs 287 assertions over the core: numbering, subtree moves, caret placement, code-fence handling, heading counters, the number templates and their round-trips, the Thai number styles, the level and depth policy settings, presets and their JSON, per-note frontmatter, normalize, smart paste, clean text, the HTML and RTF output, multi-line moves, cut and paste as a subtree, the indent guides and the status bar.
+The test file stubs `require("obsidian")` and `require("@codemirror/*")` so `main.js` loads in plain Node, then runs 288 assertions over the core: numbering, subtree moves, caret placement, code-fence handling, heading counters, the number templates and their round-trips, the Thai number styles, the level and depth policy settings, presets and their JSON, per-note frontmatter, normalize, smart paste, clean text, the HTML and RTF output, multi-line moves, cut and paste as a subtree, the indent guides and the status bar.
 
 On top of that it builds the settings tab against small doubles for `Setting`, `PluginSettingTab`, `Modal` and the container element, and checks the rows, the buttons, the preview and the validation. The first block of the suite checks the shape Obsidian's loader needs (`module.exports`, `.default`, `prototype.onload`), so a broken export cannot slip through.
 

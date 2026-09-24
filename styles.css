@@ -41,6 +41,25 @@
 	box-shadow: none;
 }
 
+/* Indent guides: one faint rule under the last digit of an item that has
+ * sub-items. The editor places each one from real measurements, so only the
+ * look lives here. It sits above the text, and never takes a click. */
+.multilevel-number-indent-guides {
+	pointer-events: none;
+}
+
+.multilevel-number-indent-guides .multilevel-number-indent-guide {
+	width: 0;
+	border-inline-start: var(--indentation-guide-width, 1px) solid var(--mni-guide, var(--indentation-guide-color, rgba(127, 127, 140, 0.35)));
+}
+
+/* The host draws its own indentation guide at every indent step, which is
+ * the fan of lines beside a deep item. While this plugin's guides are on, those
+ * are hidden on numbered lines only; every other line keeps them. */
+body.multilevel-number-indent-guides-on .markdown-source-view.mod-cm6 .cm-line.multilevel-number-indent-line .cm-indent::before {
+	border-inline-end-color: transparent;
+}
+
 /* Settings tab: live preview of the numbering the current templates produce. */
 .multilevel-number-indent-preview {
 	margin: 0;

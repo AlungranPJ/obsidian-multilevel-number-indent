@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.3.1
+
+The guide fix from 3.3.0, done properly.
+
+- **The rule really sits on the digit now.** 3.3.0 placed it by counting columns, and a proportional font or Thai text drifts off that count, so the rule landed beside the number instead of under it. The rule is now measured from the editor itself: the x of the last digit, `5.1.1.` hangs on its final `1`, to the pixel, in any font.
+- **One rule per item, running down its subtree.** An item with sub-items draws one rule from under its own number to its last sub-item. An item with nothing under it draws nothing, so a flat list stays clean.
+- **The host's own indentation guides are hidden on numbered lines** while this plugin's guides are on. They are what drew a rule at every indent step, the fan of lines beside a deep item. Every other line keeps them, and switching **Indent guides** off brings them back.
+
 ## 3.3.0
 
 The guides get quieter and the menu gets shorter.
