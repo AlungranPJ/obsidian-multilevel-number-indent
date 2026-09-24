@@ -912,6 +912,67 @@ check("the whole group moves as one", v3Swapped.lines, [
 	"2. e",
 ]);
 check("the caret follows the group", v3Swapped.lines[v3Swapped.caretLine], "  1.2. a");
+check("the selection follows the group down", [v3Swapped.selectFrom, v3Swapped.selectTo], [2, 4]);
+
+/* The selection survives every key: drag over a group, then Tab, Shift+Tab,
+ * Alt+Down, Alt+Up in a row, and the same lines stay selected each time. The
+ * editor here is a double that applies the transaction to a string. */
+console.log("a selection stays on the group through every key");
+function fakeEditor(lines, from, to) {
+	let text = lines.join("\n");
+	let sel = { from, to };
+	const lineStart = (t, n) => t.split("\n").slice(0, n).reduce((a, l) => a + l.length + 1, 0);
+	return {
+		getValue: () => text,
+		getCursor: (which) => (which === "to" ? sel.to : sel.from),
+		transaction(tx) {
+			for (const c of tx.changes) {
+				const a = lineStart(text, c.from.line) + c.from.ch;
+				const b = lineStart(text, c.to.line) + c.to.ch;
+				text = text.slice(0, a) + c.text + text.slice(b);
+			}
+			if (tx.selection) sel = tx.selection;
+		},
+		lines: () => text.split("\n"),
+		selected: () => {
+			const all = text.split("\n");
+			return all.slice(sel.from.line, sel.to.line + 1).map((l) => l.trim().replace(/^\S+\s/, ""));
+		},
+		isRange: () => sel.from.line !== sel.to.line || sel.from.ch !== sel.to.ch,
+	};
+}
+const keyEd = fakeEditor(
+	["1. top", "  1.1. first", "  1.2. A", "  1.3. B", "  1.4. last", "2. end"],
+	{ line: 2, ch: 3 },
+	{ line: 3, ch: 5 },
+);
+const keyPlugin = Object.create(entry.prototype);
+const keyTrail = [];
+for (const action of ["indent", "outdent", "moveDown", "moveUp", "moveUp"]) {
+	const ok = keyPlugin.runAction(keyEd, action);
+	keyTrail.push([action, ok, keyEd.isRange(), keyEd.selected().join("+")]);
+}
+check("Tab, Shift+Tab, Alt+Down and Alt+Up keep A and B selected", keyTrail, [
+	["indent", true, true, "A+B"],
+	["outdent", true, true, "A+B"],
+	["moveDown", true, true, "A+B"],
+	["moveUp", true, true, "A+B"],
+	["moveUp", true, true, "A+B"],
+]);
+check("after the round trip the group sits above its old neighbour", keyEd.lines(), [
+	"1. top",
+	"  1.1. A",
+	"  1.2. B",
+	"  1.3. first",
+	"  1.4. last",
+	"2. end",
+]);
+const oneEd = fakeEditor(["1. top", "  1.1. a", "  1.2. b", "2. end"], { line: 2, ch: 0 }, { line: 2, ch: 7 });
+keyPlugin.runAction(oneEd, "moveUp");
+check("a single dragged line stays selected after Alt+Up", [oneEd.isRange(), oneEd.selected().join("+")], [true, "b"]);
+const caretEd = fakeEditor(["1. top", "  1.1. a", "  1.2. b", "2. end"], { line: 2, ch: 7 }, { line: 2, ch: 7 });
+keyPlugin.runAction(caretEd, "moveUp");
+check("a plain caret stays a caret", caretEd.isRange(), false);
 
 console.log("cut and paste as a subtree");
 const v3Cut = core.cutItem(["1. alpha", "  1.1. beta", "    1.1.1. gamma", "  1.2. delta"], 1);

@@ -1354,7 +1354,10 @@ function moveItems(lines, from, to, dir) {
 				.concat(lines.slice(first, last + 1), lines.slice(other, sib.end + 1), lines.slice(last + 1))
 		: lines.slice(0, first).concat(lines.slice(other, sib.end + 1), lines.slice(first, last + 1), lines.slice(sib.end + 1));
 	if (renumberRange(out, Math.max(0, Math.min(first, other) - 1), Math.min(out.length - 1, Math.max(last, sib.end) + 1))) {
-		return { lines: out, caretLine: dir ? other : first + (sib.end - other + 1), caretCh: null };
+		/* The group's new first line; the selection follows it there, so the
+		 * next Alt+Up/Down or Tab moves the same group again. */
+		const start = dir ? other : first + (sib.end - other + 1);
+		return { lines: out, caretLine: start, caretCh: null, selectFrom: start, selectTo: start + (last - first) };
 	}
 	return null;
 }
@@ -1936,9 +1939,16 @@ class MultilevelNumberIndent extends Plugin {
 		let caretCh = result.caretCh;
 		if (caretCh === null) caretCh = caretAfter(before[cursor.line] || "", lineText, cursor.ch);
 		caretCh = Math.min(caretCh, lineText.length);
+		/* A selection survives every move: the group stays selected until the
+		 * user clicks elsewhere, so Tab, Shift+Tab and Alt+Up/Down can be
+		 * pressed again and again on the same lines. A single dragged line
+		 * keeps its whole line selected the same way. */
+		const hadSelection = editor.getCursor("from").line !== editor.getCursor("to").line || editor.getCursor("from").ch !== editor.getCursor("to").ch;
 		const keepGroup = typeof result.selectFrom === "number" && typeof result.selectTo === "number";
-		const selection = keepGroup
-			? { from: { line: result.selectFrom, ch: 0 }, to: { line: result.selectTo, ch: (result.lines[result.selectTo] || "").length } }
+		const selFrom = keepGroup ? result.selectFrom : caretLine;
+		const selTo = keepGroup ? result.selectTo : caretLine;
+		const selection = (keepGroup || (hadSelection && action !== "enter"))
+			? { from: { line: selFrom, ch: 0 }, to: { line: selTo, ch: (result.lines[selTo] || "").length } }
 			: { from: { line: caretLine, ch: caretCh }, to: { line: caretLine, ch: caretCh } };
 		editor.transaction({
 			changes: [{ from: offsetToPos(text, diff.from), to: offsetToPos(text, diff.to), text: diff.insert }],

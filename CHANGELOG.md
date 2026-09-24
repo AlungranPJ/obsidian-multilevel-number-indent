@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.3.3
+
+The selection stays put.
+
+- **A dragged selection now survives every move key.** 3.3.2 kept it after <kbd>Tab</kbd> and <kbd>Shift</kbd>+<kbd>Tab</kbd>, but <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> still dropped it to a caret, so the second press moved one line instead of the group. Now the selection travels with the group through any mix of the four keys, and only goes away when you click somewhere else. Walk a block into place with as many presses as it takes.
+- A single dragged line stays selected the same way. A plain caret stays a plain caret, and <kbd>Enter</kbd> behaves as before.
+- Five new tests press the keys in a row on an editor double, and four of them fail against 3.3.2.
+
 ## 3.3.2
 
 A fix for Tab over a selection.
