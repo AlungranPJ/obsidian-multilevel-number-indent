@@ -1417,25 +1417,38 @@ function setLevel(lines, l, target) {
 /* ------------------------------ indent guide ------------------------------ */
 
 /**
- * The background that draws one vertical rule per level in front of a line. It
- * is one repeating gradient sized in `ch`, so it tracks the editor font instead
- * of guessing pixel widths: the rules land just left of every indent step.
+ * The column of the last digit of a rendered number, so a line can hang its one
+ * rule on the number it actually shows. Closing marks and separators are not
+ * numbers, and Thai digits count like any other.
  */
-function guideStyle(indent, levels) {
-	if (levels <= 0) return "";
-	const unit = (indentColumns(indent) || 2) + "ch";
+function lastNumberIndex(number) {
+	for (let i = number.length - 1; i >= 0; i--) {
+		const ch = number[i];
+		if (ch.trim() === "" || ".:()[]".indexOf(ch) >= 0) continue;
+		return i;
+	}
+	return -1;
+}
+
+/**
+ * The background that draws the one vertical rule a numbered line gets, aligned
+ * with the last digit of its own number. One line, one rule, instead of a fan of
+ * rules across the indent steps. The column is counted in `ch`, so it tracks the
+ * editor font instead of guessing pixel widths.
+ */
+function guideStyle(column) {
+	if (column < 0) return "";
+	const at = column + "ch";
 	return (
-		"background-image:repeating-linear-gradient(90deg,var(--mni-guide,rgba(127,127,140,0.35)) 0 1px,transparent 1px calc(" +
-		unit +
-		"));" +
-		"background-position:calc(" +
-		unit +
-		" - 1px) 0;" +
-		"background-size:calc(" +
-		unit +
-		" * " +
-		levels +
-		") 100%;background-repeat:no-repeat"
+		"background-image:linear-gradient(90deg,transparent 0 calc(" +
+		at +
+		"),var(--mni-guide,rgba(127,127,140,0.35)) calc(" +
+		at +
+		") calc(" +
+		at +
+		" + 1px),transparent calc(" +
+		at +
+		" + 1px));background-repeat:no-repeat"
 	);
 }
 
@@ -1566,6 +1579,7 @@ const CORE = {
 	setLevel,
 	headingContinuation,
 	guideStyle,
+	lastNumberIndex,
 	statusFor,
 	STYLES,
 	STYLE_RE,
@@ -1756,25 +1770,54 @@ class MultilevelNumberIndent extends Plugin {
 	}
 
 	/**
-	 * One labelled group in the editor's right-click menu. The two heading
-	 * commands light up on a heading and stay grey everywhere else.
+	 * One labelled group in the editor's right-click menu, sorted into small
+	 * categories so the list stays readable. The two heading commands light up
+	 * on a heading and stay hidden everywhere else.
 	 */
 	registerEditorMenu() {
+		const groups = [
+			{
+				title: "Numbering",
+				ids: ["renumber-block", "insert-numbering", "remove-numbering", "clear-format", "normalize-outline", "ingest-outline"],
+			},
+			{ title: "Moving items", ids: ["cut-item", "paste-item", "move-item-to-level"] },
+			{ title: "Copying out", ids: ["copy-clean-text", "save-clean-note", "copy-formatted", "copy-list"] },
+			{
+				title: "Headings",
+				ids: ["number-headings", "remove-heading-numbers", "continue-heading-numbering", "restart-heading-numbering"],
+			},
+		];
+		const headingOnly = { "continue-heading-numbering": true, "restart-heading-numbering": true };
+		const grouped = {};
+		for (const group of groups) for (const id of group.ids) grouped[id] = true;
 		this.registerEvent(
 			this.app.workspace.on("editor-menu", (menu, editor) => {
+				const text = editor.getValue().split("\n")[editor.getCursor().line] || "";
+				const onHeading = parseHeading(text) !== null;
+				const byId = {};
+				for (const cmd of this.commandList || []) byId[cmd.id] = cmd;
+				const run = (cmd) => (entry) =>
+					entry.setTitle(cmd.name).onClick(() => {
+						this.app.commands.executeCommandById(this.manifest.id + ":" + cmd.id);
+					});
+				const visible = (cmd) => Boolean(cmd) && (!headingOnly[cmd.id] || onHeading);
 				menu.addItem((item) => {
 					item.setTitle("Multilevel list section").setIcon("list-ordered");
-					const sub = typeof item.setSubmenu === "function" ? item.setSubmenu() : null;
-					const target = sub || menu;
+					const target = typeof item.setSubmenu === "function" ? item.setSubmenu() : menu;
+					for (const group of groups) {
+						const cmds = group.ids.map((id) => byId[id]).filter(visible);
+						if (cmds.length === 0) continue;
+						target.addItem((groupItem) => {
+							groupItem.setTitle(group.title);
+							const sub = typeof groupItem.setSubmenu === "function" ? groupItem.setSubmenu() : target;
+							for (const cmd of cmds) sub.addItem(run(cmd));
+						});
+					}
+					/* Anything the categories do not name still shows up, so a new
+					 * command can never silently miss the menu. */
 					for (const cmd of this.commandList || []) {
-						const isHeadingAction = cmd.id === "continue-heading-numbering" || cmd.id === "restart-heading-numbering";
-						const text = editor.getValue().split("\n")[editor.getCursor().line] || "";
-						if (isHeadingAction && parseHeading(text) === null) continue;
-						target.addItem((entry) =>
-							entry.setTitle(cmd.name).onClick(() => {
-								this.app.commands.executeCommandById(this.manifest.id + ":" + cmd.id);
-							})
-						);
+						if (grouped[cmd.id] || !visible(cmd)) continue;
+						target.addItem(run(cmd));
 					}
 				});
 			})
@@ -2088,10 +2131,10 @@ function buildDecorations(view) {
 			const index = line.number - 1;
 			const p = mask[index] ? null : parseLine(line.text);
 			if (p) {
-				/* One rule per level, drawn as a background so the text itself
-				 * is never touched and copy and paste stay clean. */
-				const levels = Math.floor(p.columns / (indentColumns(CONFIG.indent) || 2));
-				const style = CONFIG.indentGuides ? guideStyle(CONFIG.indent, levels) : "";
+				/* One rule per numbered line, drawn as a background so the text
+				 * itself is never touched and copy and paste stay clean. */
+				const column = indentColumns(p.indent) + Math.max(0, lastNumberIndex(p.number));
+				const style = CONFIG.indentGuides ? guideStyle(column) : "";
 				builder.add(
 					line.from,
 					line.from,

@@ -887,9 +887,12 @@ check("moving to a level moves the subtree", v3Levelled.lines, ["1. alpha", "  1
 check("an item already at that level is left alone", core.setLevel(["1. alpha"], 0, 0), null);
 
 console.log("indent guide and status bar");
-check("the guide draws one rule per level", core.guideStyle("  ", 2).includes("ch * 2"), true);
-check("a line with no depth draws nothing", core.guideStyle("  ", 0), "");
-check("the guide tracks the indent unit", core.guideStyle("\t", 1).includes("4ch"), true);
+check("the guide draws one rule at the number", core.guideStyle(4).includes("4ch"), true);
+check("the rule is one line, not a fan", core.guideStyle(4).split("linear-gradient").length, 2);
+check("a line with no column draws nothing", core.guideStyle(-1), "");
+check("the last digit of a dotted number sets the column", core.lastNumberIndex("5.1.1."), 4);
+check("a closing mark is not a number", core.lastNumberIndex("1)"), 0);
+check("a Thai digit counts too", core.lastNumberIndex("\u0e02\u0e49\u0e2d \u0e51."), 4);
 check("the status names the level and the number", core.statusFor(["1. alpha", "  1.1. beta"], 1), "Level 2 · 1.1.");
 check("a plain line says nothing", core.statusFor(["plain"], 0), "");
 

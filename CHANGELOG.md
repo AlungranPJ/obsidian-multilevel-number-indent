@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.3.0
+
+The guides get quieter and the menu gets shorter.
+
+- **One rule per numbered line, on the number itself.** A line used to draw one rule per indent step, so a deep item left a fan of lines hanging in the margin. Now every numbered line draws exactly one faint rule, aligned with the last digit of its own number: `5.1.1.` hangs its rule on the final `1`, and `1)` hangs its rule on the `1`. Thai numbers and numbered headings line up the same way, and the rule is still a background, so the text stays clean for copy and paste.
+- **The right-click menu is split into four categories** under **Multilevel list section**: **Numbering**, **Moving items**, **Copying out** and **Headings**. What was one column of fifteen commands now scans in one look, and the two heading commands still only show up on a heading.
+
 ## 3.2.0
 
 A small release with one new move in it, and the pasting rules written down at last.
