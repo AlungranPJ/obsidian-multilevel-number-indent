@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.3.7
+
+For notes that are indented one way while the setting says another.
+
+- **Tab, Shift+Tab, paste and move to a level read the indent off the note.** Before, each move added or removed one unit of the *setting's* indent. A note indented with two spaces under a one-tab setting then went wrong: Tab under a sibling that already had children dropped the item a level too deep (`1.1.1.` came out as `1)`), Shift+Tab could throw an item all the way out to the top level, and a pasted item landed one level too deep. Now an item that is indented goes to the column its new siblings already use, one that is outdented goes back onto its parent's column, a paste lands on its target's column, and a jump of several levels uses the step the block itself uses. The block is still renumbered in the setting's indent afterwards, the same as before.
+- Eight new tests cover both directions (a space-indented note under a tab setting, and a tab-indented note under a space setting). Five of them fail against 3.3.6.
+- Two lint warnings gone (an unused import and an unused catch binding).
+- A `project_summary.md` in the repo maps how `main.js` fits together, for anyone picking the code up.
+
 ## 3.3.6
 
 The guides step out of the way of the text.

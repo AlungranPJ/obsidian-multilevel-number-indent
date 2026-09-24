@@ -220,7 +220,7 @@ npm ci
 npm run build
 ```
 
-ไฟล์เทสต์ stub `require("obsidian")` และ `require("@codemirror/*")` เพื่อให้ `main.js` โหลดใน Node ธรรมดาได้ แล้วรัน 313 ข้อความกับ core ครอบคลุมการนับเลข การย้ายทั้งกิ่ง ตำแหน่งเคอร์เซอร์ code fence ตัวนับ heading เทมเพลตเลขและรอบไปกลับ เลขไทย ตั้งค่าจำนวนชั้นและนโยบายความลึก preset และ JSON ของมัน frontmatter รายโน้ต normalize วางแบบฉลาด ข้อความล้วน ผลลัพธ์ HTML และ RTF การย้ายหลายบรรทัด การตัดและวางเป็นกิ่ง เมนูคลิกขวา indent guides และ status bar
+ไฟล์เทสต์ stub `require("obsidian")` และ `require("@codemirror/*")` เพื่อให้ `main.js` โหลดใน Node ธรรมดาได้ แล้วรัน 321 ข้อความกับ core ครอบคลุมการนับเลข การย้ายทั้งกิ่ง ตำแหน่งเคอร์เซอร์ code fence ตัวนับ heading เทมเพลตเลขและรอบไปกลับ เลขไทย ตั้งค่าจำนวนชั้นและนโยบายความลึก preset และ JSON ของมัน frontmatter รายโน้ต normalize วางแบบฉลาด ข้อความล้วน ผลลัพธ์ HTML และ RTF การย้ายหลายบรรทัด การตัดและวางเป็นกิ่ง เมนูคลิกขวา indent guides และ status bar
 
 นอกจากนั้นยังสร้างหน้าตั้งค่ากับ double ตัวเล็ก ๆ ของ `Setting`, `PluginSettingTab`, `Modal` และ container element เพื่อตรวจแถว ปุ่ม ตัวอย่าง และการตรวจสอบค่า บล็อกแรกของชุดเทสต์ตรวจโครงร่างที่ตัวโหลดของ Obsidian ต้องการ (`module.exports`, `.default`, `prototype.onload`) เพื่อไม่ให้ export ที่เสียหลุดรอดไปได้
 

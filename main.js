@@ -25,7 +25,7 @@
 /* Obsidian's plugin loader evaluates this file as CommonJS, so require() is the
  * only way to reach the host modules. There is no bundler and no import syntax. */
 /* eslint-disable @typescript-eslint/no-require-imports -- require() is the only way to reach the host modules in a CommonJS Obsidian plugin */
-const { Plugin, PluginSettingTab, Setting, MarkdownView, Modal, ButtonComponent, editorInfoField } = require("obsidian");
+const { Plugin, PluginSettingTab, Setting, MarkdownView, Modal, editorInfoField } = require("obsidian");
 const { Prec } = require("@codemirror/state");
 const { keymap, Decoration, ViewPlugin, layer, RectangleMarker } = require("@codemirror/view");
 /* eslint-enable @typescript-eslint/no-require-imports -- the host modules are imported, nothing else below needs the exception */
@@ -492,6 +492,74 @@ function removeIndentUnit(line) {
 }
 
 /**
+ * Moves one line left or right by `delta` columns (a tab counts as four, the
+ * same as `indentColumns`). Right adds whole indent units when the step is a
+ * multiple of one, spaces otherwise; left takes whitespace off the front and
+ * never eats into the text. Blank lines stay as they are.
+ */
+function shiftColumns(line, delta) {
+	if (delta === 0 || isBlank(line)) return line;
+	if (delta > 0) {
+		const unit = indentColumns(CONFIG.indent);
+		const pad = unit > 0 && delta % unit === 0 ? CONFIG.indent.repeat(delta / unit) : " ".repeat(delta);
+		return pad + line;
+	}
+	let left = -delta;
+	let i = 0;
+	let carry = "";
+	while (left > 0 && i < line.length && (line[i] === " " || line[i] === "\t")) {
+		const w = line[i] === "\t" ? 4 : 1;
+		if (w > left) {
+			carry = " ".repeat(w - left);
+			left = 0;
+		} else left -= w;
+		i++;
+	}
+	return carry + line.slice(i);
+}
+
+/**
+ * The column an item lands on when it becomes the last child of `sib`: the
+ * column of the children `sib` already has, or one indent unit in from it
+ * when it has none. Taking the column from the note itself is what keeps a
+ * note indented with two spaces right when the setting says one tab.
+ */
+function childColumn(lines, sib, mask) {
+	const p = parseLine(lines[sib]);
+	const sub = subtreeRange(lines, sib, mask);
+	for (let i = sib + 1; i <= sub.end; i++) {
+		if (mask && mask[i]) continue;
+		const q = parseLine(lines[i]);
+		if (q && q.columns > p.columns) return q.columns;
+	}
+	return p.columns + (indentColumns(CONFIG.indent) || 2);
+}
+
+/** The line of the nearest earlier item at exactly `p`'s level, or -1. */
+function earlierSibling(lines, l, p, mask) {
+	const block = findBlock(lines, l);
+	for (let i = l - 1; i >= block.start; i--) {
+		if (mask[i] || isBlank(lines[i])) continue;
+		const q = parseLine(lines[i]);
+		if (!q) break;
+		if (q.columns === p.columns) return i;
+		if (q.columns < p.columns) break;
+	}
+	return -1;
+}
+
+/** The column of the item `l` hangs under, or 0 when it has no parent. */
+function parentColumn(lines, l, p, mask) {
+	const block = findBlock(lines, l);
+	for (let i = l - 1; i >= block.start; i--) {
+		if (mask[i]) continue;
+		const q = parseLine(lines[i]);
+		if (q && q.columns < p.columns) return q.columns;
+	}
+	return 0;
+}
+
+/**
  * Indent the item on line `l` plus its subtree. Returns null when the line is
  * not numbered, or when there is no earlier sibling at the same level (there is
  * nothing to become a child of, so the key must fall through untouched).
@@ -502,27 +570,20 @@ function indentItem(lines, l) {
 	const mask = fenceMask(lines);
 	if (mask[l]) return null;
 	const block = findBlock(lines, l);
-	let hasSibling = false;
-	for (let i = l - 1; i >= block.start; i--) {
-		if (mask[i] || isBlank(lines[i])) continue;
-		const q = parseLine(lines[i]);
-		if (!q) break;
-		if (q.columns === p.columns) {
-			hasSibling = true;
-			break;
-		}
-		if (q.columns < p.columns) break;
-	}
-	if (!hasSibling) return null;
+	const sib = earlierSibling(lines, l, p, mask);
+	if (sib < 0) return null;
 	/* With the "unnumbered" policy the outline has a floor to its depth: Tab
 	 * stops working past the last configured level instead of pushing the item
 	 * into body text behind the user's back. */
 	if (stopsAt(depthInBlock(lines, l, mask) + 1, CONFIG.formats, CONFIG.depthPolicy)) return null;
+	/* The item lands on the column its new siblings already use, so a note
+	 * indented with spaces stays right under a tab setting and the reverse. */
+	const delta = childColumn(lines, sib, mask) - p.columns;
 	const sub = subtreeRange(lines, l, mask);
 	const out = lines.slice();
 	for (let i = sub.start; i <= sub.end; i++) {
 		if (mask[i]) continue;
-		if (parseLine(out[i])) out[i] = CONFIG.indent + out[i];
+		if (parseLine(out[i])) out[i] = shiftColumns(out[i], delta);
 	}
 	renumberRange(out, Math.max(0, block.start - 1), Math.min(out.length - 1, sub.end + 1));
 	return out.join("\n") === lines.join("\n") ? null : { lines: out, caretLine: l, caretCh: null };
@@ -537,12 +598,14 @@ function outdentItem(lines, l) {
 	if (mask[l]) return null;
 	if (p.columns === 0) return null;
 	const block = findBlock(lines, l);
+	/* Back onto its parent's column, however the note spells that indent. */
+	const delta = parentColumn(lines, l, p, mask) - p.columns;
 	const sub = subtreeRange(lines, l, mask);
 	const out = lines.slice();
 	for (let i = sub.start; i <= sub.end; i++) {
 		if (mask[i]) continue;
 		if (!parseLine(out[i])) continue;
-		out[i] = removeIndentUnit(out[i]);
+		out[i] = shiftColumns(out[i], delta);
 	}
 	renumberRange(out, Math.max(0, block.start - 1), Math.min(out.length - 1, sub.end + 1));
 	return out.join("\n") === lines.join("\n") ? null : { lines: out, caretLine: l, caretCh: null };
@@ -905,7 +968,7 @@ function parsePresetsJson(text) {
 	let data;
 	try {
 		data = JSON.parse(String(text));
-	} catch (e) {
+	} catch {
 		return null;
 	}
 	if (!Array.isArray(data)) return null;
@@ -1319,9 +1382,13 @@ function shiftItems(lines, from, to, dir) {
 	const p = parseLine(lines[roots[0]]);
 	/* The whole group moves only when the guard passes for the group as a
 	 * whole, the way Word does it. */
-	if (dir > 0 && !hasEarlierSibling(lines, roots[0], p, mask)) return null;
+	const sib = dir > 0 ? earlierSibling(lines, roots[0], p, mask) : -1;
+	if (dir > 0 && sib < 0) return null;
 	if (dir > 0 && stopsAt(depthInBlock(lines, roots[0], mask) + 1, CONFIG.formats, CONFIG.depthPolicy)) return null;
 	if (dir < 0 && p.columns === 0) return null;
+	/* One distance for the whole group, read off the note: in under the
+	 * sibling's existing children, or out onto the parent's column. */
+	const delta = dir > 0 ? childColumn(lines, sib, mask) - p.columns : parentColumn(lines, roots[0], p, mask) - p.columns;
 	/* Every subtree is measured on the untouched text, and every line moves
 	 * exactly once. Measuring on the text being edited let an item that had
 	 * already moved right fall into the subtree of the item above it, so it
@@ -1335,7 +1402,7 @@ function shiftItems(lines, from, to, dir) {
 	}
 	const out = lines.slice();
 	for (let i = 0; i < out.length; i++) {
-		if (moveLine[i] && !isBlank(out[i])) out[i] = shiftBlockIndent([out[i]], dir)[0];
+		if (moveLine[i] && !isBlank(out[i])) out[i] = shiftColumns(out[i], delta);
 	}
 	const block = findBlock(lines, roots[0]);
 	renumberRange(out, Math.max(0, block.start - 1), Math.min(out.length - 1, last + 1));
@@ -1409,8 +1476,10 @@ function pasteItem(lines, l, taken) {
 	}
 	const first = parseLine(taken[0]);
 	if (!first) return null;
-	const steps = Math.round((indentColumns(indent) - first.columns) / (indentColumns(CONFIG.indent) || 2));
-	const moved = shiftBlockIndent(taken, steps);
+	/* Onto the target's own column, measured in columns rather than setting
+	 * units, so a tab-indented cut lands right in a space-indented note. */
+	const delta = indentColumns(indent) - first.columns;
+	const moved = taken.map((line) => shiftColumns(line, delta));
 	const next = out.slice(0, at).concat(moved, out.slice(at));
 	const block = findBlock(next, at);
 	renumberRange(next, Math.max(0, block.start - 1), Math.min(next.length - 1, block.end + 1));
@@ -1426,8 +1495,18 @@ function setLevel(lines, l, target) {
 	const depth = depthInBlock(lines, l, mask);
 	if (depth === goal) return null;
 	const sub = subtreeRange(lines, l, mask);
-	const unit = indentColumns(CONFIG.indent) || 2;
-	const moved = shiftBlockIndent(lines.slice(sub.start, sub.end + 1), Math.round((goal - depth) * unit) / unit);
+	/* One level is the step this block actually uses (two spaces, four, a
+	 * tab), not the setting, so a jump of several levels lands on real
+	 * columns in a note indented another way. */
+	const block0 = findBlock(lines, l);
+	const cols = [];
+	for (let i = block0.start; i <= block0.end; i++) {
+		const q = !mask[i] && parseLine(lines[i]);
+		if (q) cols.push(q.columns);
+	}
+	const sorted = Array.from(new Set(cols)).sort((a, b) => a - b);
+	const unit = smallestStep(sorted.slice(1).map((c, k) => c - sorted[k]), indentColumns(CONFIG.indent) || 2);
+	const moved = lines.slice(sub.start, sub.end + 1).map((line) => shiftColumns(line, (goal - depth) * unit));
 	const out = lines.slice();
 	for (let i = 0; i < moved.length; i++) out[sub.start + i] = moved[i];
 	const block = findBlock(lines, l);
@@ -1620,6 +1699,8 @@ const CORE = {
 	headingContinuation,
 	guideSpans,
 	guideX,
+	shiftColumns,
+	childColumn,
 	lastNumberIndex,
 	statusFor,
 	STYLES,

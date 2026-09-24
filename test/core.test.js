@@ -1053,6 +1053,34 @@ check("on a heading the continue and restart commands appear", headingInside.fil
 	"restart-heading-numbering",
 ]);
 
+/* Mixed indentation: a note indented with two spaces while the setting is
+ * one tab, and the reverse. Every move reads the step off the note itself,
+ * so nothing lands a level too deep or falls out to the top level. */
+console.log("a note indented another way than the setting");
+core.setConfig({ indent: "\t" });
+check("Tab under a sibling with children joins them (spaces note, tab setting)",
+	core.applyAction(["1. top", "  1.1. a", "    1.1.1. x", "  1.2. b", "2. end"], 3, 8, "indent").lines,
+	["1. top", "\t1.1. a", "\t\t1.1.1. x", "\t\t1.1.2. b", "2. end"]);
+check("Shift+Tab goes up one level, not to the top (spaces note, tab setting)",
+	core.applyAction(["1. top", "  1.1. a", "  1.2. b", "    1.2.1. c", "2. end"], 3, 12, "outdent").lines,
+	["1. top", "\t1.1. a", "\t1.2. b", "\t1.3. c", "2. end"]);
+check("a pasted item lands beside its target (spaces note, tab setting)",
+	core.pasteItem(["1. top", "  1.1. a", "2. end"], 1, ["1. moved", "  1.1. kid"]).lines,
+	["1. top", "\t1.1. a", "\t1.2. moved", "\t\t1.2.1. kid", "2. end"]);
+check("a group Tab joins the sibling's children (spaces note, tab setting)",
+	core.applyActionRange(["1. top", "  1.1. a", "    1.1.1. x", "  1.2. b", "  1.3. c", "2. end"], 3, 4, "indent").lines,
+	["1. top", "\t1.1. a", "\t\t1.1.1. x", "\t\t1.1.2. b", "\t\t1.1.3. c", "2. end"]);
+check("move to a level uses the note's own step",
+	core.setLevel(["1. a", "  1.1. b", "    1.1.1. c", "      1) d", "2. e"], 3, 1).lines,
+	["1. a", "\t1.1. b", "\t\t1.1.1. c", "\t1.2. d", "2. e"]);
+core.setConfig({ indent: "  " });
+check("Tab under a sibling with children joins them (tab note, spaces setting)",
+	core.applyAction(["1. top", "\t1.1. a", "\t\t1.1.1. x", "\t1.2. b", "2. end"], 3, 7, "indent").lines,
+	["1. top", "  1.1. a", "    1.1.1. x", "    1.1.2. b", "2. end"]);
+check("columns shift without eating text", core.shiftColumns("\tx", -2), "  x");
+check("a blank line does not move", core.shiftColumns("   ", 4), "   ");
+core.setConfig({ indent: core.DEFAULT_SETTINGS.indent });
+
 console.log("cut and paste as a subtree");
 const v3Cut = core.cutItem(["1. alpha", "  1.1. beta", "    1.1.1. gamma", "  1.2. delta"], 1);
 check("a cut takes the item and its subtree", v3Cut.taken, ["  1.1. beta", "    1.1.1. gamma"]);
