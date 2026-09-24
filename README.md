@@ -17,6 +17,7 @@ Press <kbd>Tab</kbd> and the item steps one level deeper, subtree and all. The n
 
 - [Why this one](#why-this-one)
 - [The keys](#the-keys)
+- [The right-click menu](#the-right-click-menu)
 - [The number format](#the-number-format)
 - [Settings](#settings)
 - [Getting text out](#getting-text-out)
@@ -98,6 +99,64 @@ Also fixed: blank lines between two siblings no longer disappear when <kbd>Alt</
 A selection that spans several lines moves as one group. Drag over four sibling items and press <kbd>Tab</kbd>: all four step in one level, side by side, each keeping its own subtree, and they stay selected. The same goes for <kbd>Shift</kbd>+<kbd>Tab</kbd> and <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd>: the selection rides along with the group until you click somewhere else, so you can keep pressing keys to walk it into place. A key that has nowhere to go (a group already at the top, or with no sibling to nest under) leaves the group where it is, still selected.
 
 Every key is scoped to lines this plugin recognises. Everywhere else nothing happens: <kbd>Tab</kbd> keeps Obsidian's normal indent behaviour, <kbd>Enter</kbd> keeps working in tables, code blocks and prose, and <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> never changes depth. The caret follows the item to wherever it lands.
+
+## The right-click menu
+
+Right-click anywhere in the editor and look for **Multilevel list section** near the bottom. Hover it and one panel opens with everything this plugin can do, sorted under four small grey headings. The headings are only labels, so you can slide the mouse straight from **Numbering** down to **Headings** without anything closing on you.
+
+![The right-click menu, with the plugin's commands under Multilevel list section](assets/context-menu.png)
+
+A rule of thumb before the details: **select first, then right-click.** Most commands work on the lines you selected. With nothing selected they work on the line under the cursor (or on the whole note, where that is what makes sense, and the table says so). Every command is one step of undo, so <kbd>Ctrl</kbd>+<kbd>Z</kbd> always puts things back if the result is not what you pictured.
+
+### Numbering
+
+| Menu item | Use it when | What happens |
+|---|---|---|
+| **Renumber multilevel block** | The numbers went out of step after hand edits: `1.5.` under `1.`, two items both called `3.` | Every number in the block is counted again from the real indentation. The words are not touched. The cursor can sit anywhere in the list. |
+| **Insert multilevel numbering** | You wrote plain lines and indented them with <kbd>Tab</kbd>, and now you want numbers | Select the lines. Each one gets the number its indent calls for: `Goals` / `→ speed` becomes `1. Goals` / `→ 1.1. speed`. For bullets or someone else's numbers use **Turn the selection into a numbered outline** instead, it strips the old marker first. |
+| **Remove multilevel numbering** | You want this plugin's numbers gone and nothing else changed | The `1.` / `1.1.` / `1)` come off. Bullets, headings and indentation stay exactly as they are. |
+| **Clear list markers and keep the indent** | You want a clean slate: every kind of marker gone | Numbers of any style, bullets (`-` `*` `•`), and heading numbers all come off. The indentation stays, so the shape of the list survives and you can number it again in one click. |
+| **Normalize the outline** | A list looks ragged: three spaces here, five there, `1.text` with no space | Indents snap to whole levels, the space after the number comes back, trailing spaces go, and everything is renumbered. |
+| **Turn the selection into a numbered outline** | You pasted a list from Word, a web page or a chat | Select the pasted lines. Old bullets and numbers are replaced with this plugin's numbering, and a dotted number decides its own level: `1.1 Scope` lands at level 2, `1.1.1 In scope` at level 3, whatever the indent says. See [Smart placement](#smart-placement). |
+
+### Moving items
+
+| Menu item | Use it when | What happens |
+|---|---|---|
+| **Cut the item with its subtree** | An item and everything under it belongs somewhere far away, too far for <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> | Put the cursor on the item and pick it. The item and all its sub-items leave the note and wait in the plugin's own pocket (your normal clipboard is left alone). The list closes up and renumbers. |
+| **Paste the cut item here** | Right after a cut | Put the cursor on the item you want it to follow. The whole branch lands right after that item, at the same level, and everything renumbers. With nothing cut, it does nothing. |
+| **Move the item to a level** | You know the level you want: "this should be level 2" | A small box asks for a level number. The item and its sub-items jump there in one go, instead of pressing <kbd>Tab</kbd> or <kbd>Shift</kbd>+<kbd>Tab</kbd> several times. |
+
+### Copying out
+
+These four work on the selection, or on the whole note when nothing is selected. None of them changes the note.
+
+| Menu item | Use it when | What happens |
+|---|---|---|
+| **Copy as clean text** | Pasting into a chat, an email, a form: somewhere Markdown would look like noise | The text goes to the clipboard with the numbers kept and the Markdown gone: `[[Note\|shown]]` becomes `shown`, `**bold**` becomes `bold`, `%%comments%%` disappear. |
+| **Save the selection as a clean note** | You want that clean version as a file of its own | The same clean text, saved as a new note named after this one, `(clean)` on the end. |
+| **Copy as formatted text** | Pasting into Word, Google Docs or an email and you want it to look like the note | Rich text with the numbering exactly as you see it, indents included. |
+| **Copy as a real nested list** | The other document should own the numbering, so it can keep renumbering as people edit | A real nested list: Word or the mail app numbers it with its own list style. |
+
+### Headings
+
+| Menu item | Use it when | What happens |
+|---|---|---|
+| **Number headings in note** | You want a numbered document structure | Every heading in the note gets a number: `# 1 Intro`, `## 1.1 Scope`, `# 2 Method`. From then on, changing a heading level with <kbd>Tab</kbd> renumbers them automatically. |
+| **Remove heading numbers** | The report is done, or you changed your mind | The numbers come off every heading, and the automatic renumbering stops. |
+| **Continue numbering past this heading** | A list above a heading should keep counting below it (`4.` `5.`) instead of starting again at `1.` | Only shows when you right-click a heading. A tiny invisible mark goes on the heading line. It never shows in reading view or in a clean copy. |
+| **Restart numbering at this heading** | You want the normal fresh `1.` back under that heading | Only shows on a heading. It takes that mark away again. |
+
+### Pasting a list that already has numbers
+
+Two ways, pick whichever suits you:
+
+- **Automatic.** Switch on **Format pasted lists** in the settings tab. From then on <kbd>Ctrl</kbd>+<kbd>V</kbd> of anything that looks like a list (at least two numbered or bulleted lines, or lines at different indents) is laid out as this plugin's numbering straight away. Plain paragraphs are pasted as they are. The switch ships off, so turn it on the first time.
+- **By hand.** Paste as usual, select the pasted lines, right-click, **Multilevel list section**, **Turn the selection into a numbered outline**.
+
+Either way you do **not** need to clear the old numbers first. The old markers are replaced for you, and a dotted number such as `1.1` or `1.1.1` even tells the plugin which level it belongs on. Reach for **Clear list markers and keep the indent** first only when you want to throw the old structure away and arrange the lines yourself.
+
+One thing the plugin cannot guess: a line with no dotted number is placed by its indent. So `a) speed` sitting flush under `1) Goals` with no indent comes out as a sibling, not a child. Select those lines and press <kbd>Tab</kbd> once, and they step in together.
 
 ## The number format
 
@@ -247,9 +306,7 @@ A heading normally starts a fresh list: the items under it count from `1.` again
 
 Each command is one editor transaction, so a single <kbd>Ctrl</kbd>+<kbd>Z</kbd> puts everything back.
 
-Right-click in the editor and every one of these is also under **Multilevel list section**, one labelled group of its own, sorted under four small headings: **Numbering**, **Moving items**, **Copying out** and **Headings**. The headings are just labels inside that one submenu, so every command is one hover and one click away and you can slide straight from one category to the next. The two heading commands ride along in **Headings**, and they only show up when the cursor is on a heading.
-
-![The right-click menu, with the plugin's commands under Multilevel list section](assets/context-menu.png)
+Every command is also in the right-click menu, and the [right-click menu](#the-right-click-menu) section walks through each one.
 
 ## What this plugin touches
 

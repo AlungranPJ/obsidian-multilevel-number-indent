@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.3.8
+
+A guide to the right-click menu. No change to how the plugin behaves.
+
+- **The right-click menu, item by item.** A new section in both READMEs walks through every entry under **Multilevel list section**: when you would reach for it, and what it does to the note. It starts with the one rule that explains most of the menu (select first, then right-click) and says which commands fall back to the whole note.
+- **Pasting a list that already has numbers.** Written down plainly: switch on **Format pasted lists** and <kbd>Ctrl</kbd>+<kbd>V</kbd> lays a list out straight away, or paste as usual and pick **Turn the selection into a numbered outline**. Either way the old numbers do not have to be cleared first. The one thing it cannot guess (an unindented `a)` under `1)`) is spelled out, with the one-key fix.
+
 ## 3.3.7
 
 For notes that are indented one way while the setting says another.
