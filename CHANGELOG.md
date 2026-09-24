@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.3.2
+
+A fix for Tab over a selection.
+
+- **A selected group now steps in together.** Drag over four sibling items, `2.2.` to `2.5.`, and press <kbd>Tab</kbd>: they used to fan out into a staircase, `2.1.4.` then `1)` then `1.1)` then `1.1.1)`, each one a level deeper than the last. Each item was measured after the one above it had already moved, so it fell into that item's subtree and moved a second time. Every subtree is now measured on the untouched text and every line moves exactly once, so the four land side by side as `2.1.4.` to `2.1.7.`.
+- **The selection stays on the group** after <kbd>Tab</kbd> or <kbd>Shift</kbd>+<kbd>Tab</kbd>, so pressing it again moves the same lines again.
+- Four new tests cover it, and they fail against 3.3.1, which is how the old suite let it through: it only ever selected one item with its child.
+
 ## 3.3.1
 
 The guide fix from 3.3.0, done properly.

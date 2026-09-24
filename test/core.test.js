@@ -856,6 +856,51 @@ const v3Outdented = core.applyActionRange(v3Indented.lines, 2, 3, "outdent");
 check("a group outdents one level", v3Outdented.lines, v3Group);
 check("a group with no earlier sibling does not indent", core.applyActionRange(v3Group, 1, 2, "indent"), null);
 
+/* Four siblings selected together, the case that used to fan out into a
+ * staircase (1.1.4. / 1) / 1.1) / 1.1.1)). They must all move one level,
+ * side by side, and the selection must stay on them for the next Tab. */
+const v3Siblings = [
+	"2. top",
+	"  2.1. section",
+	"    2.1.1. a",
+	"    2.1.2. b",
+	"  2.2. Agent orchestrator",
+	"  2.3. Task manager engine",
+	"  2.4. Context engine",
+	"  2.5. Skill library",
+	"  2.6. after",
+];
+const v3Row = core.applyActionRange(v3Siblings, 4, 7, "indent");
+check("four selected siblings indent together, not as a staircase", v3Row.lines, [
+	"1. top",
+	"  1.1. section",
+	"    1.1.1. a",
+	"    1.1.2. b",
+	"    1.1.3. Agent orchestrator",
+	"    1.1.4. Task manager engine",
+	"    1.1.5. Context engine",
+	"    1.1.6. Skill library",
+	"  1.2. after",
+]);
+check("the selection stays on the moved group", [v3Row.selectFrom, v3Row.selectTo], [4, 7]);
+const v3Back = core.applyActionRange(v3Row.lines, 4, 7, "outdent");
+check("Shift+Tab brings the same group back in one row", v3Back.lines.slice(4, 8), [
+	"  1.2. Agent orchestrator",
+	"  1.3. Task manager engine",
+	"  1.4. Context engine",
+	"  1.5. Skill library",
+]);
+const v3Kids = core.applyActionRange(["1. top", "  1.1. s", "  1.2. A", "    1.2.1. a1", "  1.3. B", "  1.4. C", "2. end"], 2, 5, "indent");
+check("siblings with their own children keep their shape", v3Kids.lines, [
+	"1. top",
+	"  1.1. s",
+	"    1.1.1. A",
+	"      1) a1",
+	"    1.1.2. B",
+	"    1.1.3. C",
+	"2. end",
+]);
+
 console.log("a group swaps with its neighbours");
 const v3Swapped = core.applyActionRange(["1. alpha", "  1.1. a", "  1.2. b", "    1.2.1. c", "  1.3. d", "2. e"], 1, 2, "moveDown");
 check("the whole group moves as one", v3Swapped.lines, [

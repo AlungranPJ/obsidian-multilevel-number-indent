@@ -1313,17 +1313,26 @@ function shiftItems(lines, from, to, dir) {
 	if (dir > 0 && !hasEarlierSibling(lines, roots[0], p, mask)) return null;
 	if (dir > 0 && stopsAt(depthInBlock(lines, roots[0], mask) + 1, CONFIG.formats, CONFIG.depthPolicy)) return null;
 	if (dir < 0 && p.columns === 0) return null;
-	const out = lines.slice();
+	/* Every subtree is measured on the untouched text, and every line moves
+	 * exactly once. Measuring on the text being edited let an item that had
+	 * already moved right fall into the subtree of the item above it, so it
+	 * moved again: four siblings came out as a staircase of four levels. */
+	const moveLine = new Array(lines.length).fill(false);
 	let last = roots[0];
-	for (let r = roots.length - 1; r >= 0; r--) {
-		const sub = subtreeRange(out, roots[r], mask);
-		const moved = shiftBlockIndent(out.slice(sub.start, sub.end + 1), dir);
-		for (let i = 0; i < moved.length; i++) out[sub.start + i] = moved[i];
+	for (const root of roots) {
+		const sub = subtreeRange(lines, root, mask);
+		for (let i = sub.start; i <= sub.end; i++) moveLine[i] = true;
 		last = Math.max(last, sub.end);
+	}
+	const out = lines.slice();
+	for (let i = 0; i < out.length; i++) {
+		if (moveLine[i] && !isBlank(out[i])) out[i] = shiftBlockIndent([out[i]], dir)[0];
 	}
 	const block = findBlock(lines, roots[0]);
 	renumberRange(out, Math.max(0, block.start - 1), Math.min(out.length - 1, last + 1));
-	return out.join("\n") === lines.join("\n") ? null : { lines: out, caretLine: roots[0], caretCh: null };
+	if (out.join("\n") === lines.join("\n")) return null;
+	/* The selection stays on the same lines, so the next Tab moves the same group. */
+	return { lines: out, caretLine: roots[0], caretCh: null, selectFrom: from, selectTo: Math.max(to, last) };
 }
 
 /** Alt+Up/Down across a group of items: the group swaps with the neighbouring
@@ -1927,9 +1936,13 @@ class MultilevelNumberIndent extends Plugin {
 		let caretCh = result.caretCh;
 		if (caretCh === null) caretCh = caretAfter(before[cursor.line] || "", lineText, cursor.ch);
 		caretCh = Math.min(caretCh, lineText.length);
+		const keepGroup = typeof result.selectFrom === "number" && typeof result.selectTo === "number";
+		const selection = keepGroup
+			? { from: { line: result.selectFrom, ch: 0 }, to: { line: result.selectTo, ch: (result.lines[result.selectTo] || "").length } }
+			: { from: { line: caretLine, ch: caretCh }, to: { line: caretLine, ch: caretCh } };
 		editor.transaction({
 			changes: [{ from: offsetToPos(text, diff.from), to: offsetToPos(text, diff.to), text: diff.insert }],
-			selection: { from: { line: caretLine, ch: caretCh }, to: { line: caretLine, ch: caretCh } },
+			selection,
 		});
 		return true;
 	}
