@@ -2,7 +2,7 @@
 
 [![Release](https://img.shields.io/github/v/release/AlungranPJ/obsidian-multilevel-number-indent?style=flat-square&label=release&labelColor=27272a&color=f97316)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/AlungranPJ/obsidian-multilevel-number-indent/ci.yml?style=flat-square&label=CI&labelColor=27272a)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-321_passing-f97316?style=flat-square&labelColor=27272a)](#development)
+[![Tests](https://img.shields.io/badge/tests-330_passing-f97316?style=flat-square&labelColor=27272a)](#development)
 [![License](https://img.shields.io/badge/license-MIT-52525b?style=flat-square&labelColor=27272a)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/AlungranPJ/obsidian-multilevel-number-indent/total?style=flat-square&label=downloads&labelColor=27272a&color=52525b)](https://github.com/AlungranPJ/obsidian-multilevel-number-indent/releases)
 
@@ -313,6 +313,7 @@ Every command is also in the right-click menu, and the [right-click menu](#the-r
 No network calls, no telemetry, and nothing loaded at runtime beyond what the host already provides. Two things are worth spelling out anyway.
 
 - **The clipboard, and only when you ask for it.** `Copy as plain text`, `Copy with formatting` and `Copy as nested list` write to it. `Format pasted lists` reads what you just pasted, through the paste event itself. Nothing is read or written in the background.
+- **Obsidian's own list help stays out of the plugin's way.** With **Smart lists** on, Obsidian renumbers a line you just nested so it continues the nearest earlier list. The plugin writes its edits with that pass switched off, so a new sub-list starts at `1)` instead of carrying on from an old one. Smart lists still works on everything you type yourself.
 - **Your notes, through the normal vault API.** Every command is one editor transaction, so one <kbd>Ctrl</kbd>+<kbd>Z</kbd> puts everything back. No file is touched outside the note you are in, except `Save as plain text note`, which creates one new note that you named.
 
 ## Installation
@@ -344,7 +345,7 @@ npm run build   # checks the files a release ships
 npm test        # runs the assertions
 ```
 
-The test file stubs `require("obsidian")` and `require("@codemirror/*")` so `main.js` loads in plain Node, then runs 321 assertions over the core: numbering, subtree moves, caret placement, code-fence handling, heading counters, the number templates and their round-trips, the Thai number styles, the level and depth policy settings, presets and their JSON, per-note frontmatter, normalize, smart paste, clean text, the HTML and RTF output, multi-line moves, cut and paste as a subtree, the right-click menu, the indent guides and the status bar.
+The test file stubs `require("obsidian")` and `require("@codemirror/*")` so `main.js` loads in plain Node, then runs 330 assertions over the core: numbering, subtree moves, caret placement, code-fence handling, heading counters, the number templates and their round-trips, the Thai number styles, the level and depth policy settings, presets and their JSON, per-note frontmatter, normalize, smart paste, clean text, the HTML and RTF output, multi-line moves, cut and paste as a subtree, the right-click menu, the indent guides and the status bar.
 
 On top of that it builds the settings tab against small doubles for `Setting`, `PluginSettingTab`, `Modal` and the container element, and checks the rows, the buttons, the preview and the validation. The first block of the suite checks the shape Obsidian's loader needs (`module.exports`, `.default`, `prototype.onload`), so a broken export cannot slip through.
 

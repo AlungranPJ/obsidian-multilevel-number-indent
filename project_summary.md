@@ -86,3 +86,7 @@ A throwaway note must be detached, waited on, deleted, and the vault folder chec
 
 - Community directory: listing image 3, Save not confirmed, scorecard after 3.x not checked.
 - 8 eslint warnings are the accepted CommonJS ones (`require`/`module` not defined, settings search definitions).
+
+## Writing into the editor
+
+Every edit goes through `writeEdit(editor, change, selection)`: a CodeMirror dispatch with `filter: false`, because Obsidian's **Smart lists** change filter rewrites a freshly nested list number (a new sub-list's `1)` became `4)`). Never call `editor.transaction` or `replaceSelection` directly. A transaction selection is resolved against the document after the change.

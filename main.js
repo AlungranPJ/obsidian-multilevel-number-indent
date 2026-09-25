@@ -1606,6 +1606,48 @@ function applyAction(lines, line, ch, action) {
 	}
 }
 
+/**
+ * Writes one edit into the note. The plugin has already worked out every
+ * number, so the host's smart-list pass must not touch it: with
+ * "Smart lists" on, Obsidian rewrites a freshly nested list line to continue
+ * the nearest earlier list at that depth, which turned a new sub-list's `1)`
+ * into `4)`. A CodeMirror transaction with `filter: false` skips those
+ * change filters; the plain editor API is the fallback when there is no view.
+ * `selection` is a range, "end" for a caret after the inserted text, or empty
+ * to let the editor map the old one.
+ */
+function writeEdit(editor, change, selection) {
+	const view = editor && editor.cm;
+	if (view && typeof view.dispatch === "function" && typeof editor.posToOffset === "function") {
+		const spec = {
+			changes: { from: editor.posToOffset(change.from), to: editor.posToOffset(change.to), insert: change.text },
+			filter: false,
+			userEvent: "input.mni",
+		};
+		const start = spec.changes.from;
+		if (selection === "end") spec.selection = { anchor: start + change.text.length };
+		else if (selection) {
+			/* A selection in a transaction is read against the document after
+			 * the change, so line/ch have to be resolved there, not in the old text. */
+			const after = view.state.changes(spec.changes).apply(view.state.doc);
+			const at = (pos) => {
+				const line = after.line(Math.min(after.lines, pos.line + 1));
+				return line.from + Math.min(pos.ch, line.length);
+			};
+			spec.selection = { anchor: at(selection.from), head: at(selection.to) };
+		}
+		view.dispatch(spec);
+		return;
+	}
+	if (selection === "end") {
+		editor.replaceRange(change.text, change.from, change.to);
+		return;
+	}
+	const tx = { changes: [change] };
+	if (selection) tx.selection = selection;
+	editor.transaction(tx);
+}
+
 /** Smallest single edit that turns `a` into `b`. */
 function minimalChange(a, b) {
 	let start = 0;
@@ -1661,6 +1703,7 @@ function offsetToPos(text, offset) {
 }
 
 const CORE = {
+	writeEdit,
 	DEFAULT_SETTINGS,
 	MIN_LEVELS,
 	MAX_LEVELS,
@@ -1978,7 +2021,7 @@ class MultilevelNumberIndent extends Plugin {
 				const text = event.clipboardData ? event.clipboardData.getData("text/plain") : "";
 				if (!text || !looksLikeOutline(text)) return;
 				event.preventDefault();
-				editor.replaceSelection(ingestOutline(text).join("\n"));
+				writeEdit(editor, { from: editor.getCursor("from"), to: editor.getCursor("to"), text: ingestOutline(text).join("\n") }, "end");
 			})
 		);
 	}
@@ -2073,10 +2116,7 @@ class MultilevelNumberIndent extends Plugin {
 		const selection = (keepGroup || (hadSelection && action !== "enter"))
 			? { from: { line: selFrom, ch: 0 }, to: { line: selTo, ch: (result.lines[selTo] || "").length } }
 			: { from: { line: caretLine, ch: caretCh }, to: { line: caretLine, ch: caretCh } };
-		editor.transaction({
-			changes: [{ from: offsetToPos(text, diff.from), to: offsetToPos(text, diff.to), text: diff.insert }],
-			selection,
-		});
+		writeEdit(editor, { from: offsetToPos(text, diff.from), to: offsetToPos(text, diff.to), text: diff.insert }, selection);
 		return true;
 	}
 
@@ -2087,9 +2127,7 @@ class MultilevelNumberIndent extends Plugin {
 		const next = out.join("\n");
 		if (next === text) return false;
 		const diff = minimalChange(text, next);
-		editor.transaction({
-			changes: [{ from: offsetToPos(text, diff.from), to: offsetToPos(text, diff.to), text: diff.insert }],
-		});
+		writeEdit(editor, { from: offsetToPos(text, diff.from), to: offsetToPos(text, diff.to), text: diff.insert });
 		return true;
 	}
 
@@ -2103,10 +2141,7 @@ class MultilevelNumberIndent extends Plugin {
 		const lineText = result.lines[caretLine] || "";
 		const wanted = result.caretCh === null ? cursor.ch : result.caretCh;
 		const caretCh = Math.min(wanted, lineText.length);
-		editor.transaction({
-			changes: [{ from: offsetToPos(text, diff.from), to: offsetToPos(text, diff.to), text: diff.insert }],
-			selection: { from: { line: caretLine, ch: caretCh }, to: { line: caretLine, ch: caretCh } },
-		});
+		writeEdit(editor, { from: offsetToPos(text, diff.from), to: offsetToPos(text, diff.to), text: diff.insert }, { from: { line: caretLine, ch: caretCh }, to: { line: caretLine, ch: caretCh } });
 		return true;
 	}
 
@@ -2128,7 +2163,7 @@ class MultilevelNumberIndent extends Plugin {
 			editorCallback: (editor) => {
 				const selected = editor.getSelection();
 				if (!selected) return;
-				editor.replaceSelection(ingestOutline(selected).join("\n"));
+				writeEdit(editor, { from: editor.getCursor("from"), to: editor.getCursor("to"), text: ingestOutline(selected).join("\n") }, "end");
 			},
 		});
 		this.addCommand({
@@ -2217,9 +2252,7 @@ class MultilevelNumberIndent extends Plugin {
 		const next = out.join("\n");
 		if (next === text) return false;
 		const diff = minimalChange(text, next);
-		editor.transaction({
-			changes: [{ from: offsetToPos(text, diff.from), to: offsetToPos(text, diff.to), text: diff.insert }],
-		});
+		writeEdit(editor, { from: offsetToPos(text, diff.from), to: offsetToPos(text, diff.to), text: diff.insert });
 		return true;
 	}
 }

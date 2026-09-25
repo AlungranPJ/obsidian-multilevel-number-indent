@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.3.11
+
+- **A new sub-list starts at `1)` again.** Nest a line under `1.1.2.` after a list under `1.1.1.` that ran to `3)`, and it came out `4)`, as if the old list had carried on. The plugin had it right: the number was rewritten a moment later by Obsidian's own **Smart lists** option, which renumbers a freshly nested line to continue the nearest earlier list at that depth. Every edit the plugin makes now goes into the note with the host's list filters switched off, so the numbers you see are the ones the plugin worked out. That covers Tab, Shift+Tab, Enter, Alt+↑/↓, the right-click commands and pasting a list. Smart lists stays on for everything else you type.
+- One <kbd>Ctrl</kbd>+<kbd>Z</kbd> still puts each move back, and a selected group still stays selected after the move.
+
 ## 3.3.10
 
 For the directory's build check. No change to how the plugin behaves.

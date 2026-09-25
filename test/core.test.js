@@ -917,6 +917,48 @@ check("the selection follows the group down", [v3Swapped.selectFrom, v3Swapped.s
 /* The selection survives every key: drag over a group, then Tab, Shift+Tab,
  * Alt+Down, Alt+Up in a row, and the same lines stay selected each time. The
  * editor here is a double that applies the transaction to a string. */
+/* Every edit bypasses the host's smart-list filter. With "Smart lists" on,
+ * Obsidian rewrote a new sub-list's `1)` into `4)` to continue an earlier list
+ * at the same depth, so the plugin's own numbers must go in with filter: false. */
+console.log("edits skip the host's smart-list filter");
+{
+	const specs = [];
+	const text = "ab\ncd";
+	const lineStart = (n) => text.split("\n").slice(0, n).reduce((a, l) => a + l.length + 1, 0);
+	/* A doc double shaped like CodeMirror's Text: lines are 1-based. */
+	const docOf = (t) => {
+		const ls = t.split("\n");
+		return { lines: ls.length, line: (n) => ({ from: ls.slice(0, n - 1).reduce((a, l) => a + l.length + 1, 0), length: ls[n - 1].length }) };
+	};
+	const cmEditor = {
+		cm: {
+			dispatch: (spec) => specs.push(spec),
+			state: {
+				doc: docOf(text),
+				changes: (c) => ({ apply: () => docOf(text.slice(0, c.from) + c.insert + text.slice(c.to)) }),
+			},
+		},
+		posToOffset: (pos) => lineStart(pos.line) + pos.ch,
+	};
+	core.writeEdit(cmEditor, { from: { line: 1, ch: 0 }, to: { line: 1, ch: 2 }, text: "1) x" }, { from: { line: 1, ch: 4 }, to: { line: 1, ch: 4 } });
+	check("the edit goes out as one dispatch", specs.length, 1);
+	check("the dispatch turns the change filters off", specs[0].filter, false);
+	check("the change is written at the right offsets", specs[0].changes, { from: 3, to: 5, insert: "1) x" });
+	check("the selection is carried as offsets", specs[0].selection, { anchor: 7, head: 7 });
+	core.writeEdit(cmEditor, { from: { line: 0, ch: 2 }, to: { line: 0, ch: 2 }, text: "\n3) " }, { from: { line: 1, ch: 3 }, to: { line: 1, ch: 3 } });
+	check("the caret is placed on a line the edit just made", specs[1].selection, { anchor: 6, head: 6 });
+	core.writeEdit(cmEditor, { from: { line: 0, ch: 0 }, to: { line: 0, ch: 2 }, text: "1. a\n2. b" }, "end");
+	check("a paste leaves the caret after the text", specs[2].selection, { anchor: "1. a\n2. b".length });
+	core.writeEdit(cmEditor, { from: { line: 0, ch: 0 }, to: { line: 0, ch: 0 }, text: "z" });
+	check("no selection leaves the editor to map it", specs[3].selection, undefined);
+	const txs = [];
+	const plain = { transaction: (tx) => txs.push(tx), replaceRange: (...a) => txs.push({ range: a }) };
+	core.writeEdit(plain, { from: { line: 0, ch: 0 }, to: { line: 0, ch: 1 }, text: "q" });
+	check("without a view it falls back to the editor API", txs[0], { changes: [{ from: { line: 0, ch: 0 }, to: { line: 0, ch: 1 }, text: "q" }] });
+	core.writeEdit(plain, { from: { line: 0, ch: 0 }, to: { line: 0, ch: 1 }, text: "q" }, "end");
+	check("the fallback paste uses replaceRange", txs[1].range[0], "q");
+}
+
 console.log("a selection stays on the group through every key");
 function fakeEditor(lines, from, to) {
 	let text = lines.join("\n");
