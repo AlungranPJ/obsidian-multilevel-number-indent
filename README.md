@@ -340,14 +340,15 @@ It is split in two, on purpose:
 
 ```bash
 npm ci
-npm run build
+npm run build   # checks the files a release ships
+npm test        # runs the assertions
 ```
 
 The test file stubs `require("obsidian")` and `require("@codemirror/*")` so `main.js` loads in plain Node, then runs 321 assertions over the core: numbering, subtree moves, caret placement, code-fence handling, heading counters, the number templates and their round-trips, the Thai number styles, the level and depth policy settings, presets and their JSON, per-note frontmatter, normalize, smart paste, clean text, the HTML and RTF output, multi-line moves, cut and paste as a subtree, the right-click menu, the indent guides and the status bar.
 
 On top of that it builds the settings tab against small doubles for `Setting`, `PluginSettingTab`, `Modal` and the container element, and checks the rows, the buttons, the preview and the validation. The first block of the suite checks the shape Obsidian's loader needs (`module.exports`, `.default`, `prototype.onload`), so a broken export cannot slip through.
 
-There is no compilation step: `npm run build` runs that suite, which is how the build-verification check confirms the committed `main.js` behaves the way this README says it does.
+There is no compilation step, so `npm run build` does not produce anything: it checks that the three release files are ready to ship as committed. `main.js` parses and loads as a plugin class, `manifest.json` has every field and agrees with `package.json` on the version, and `styles.css` is there. It needs no dependencies and finishes in a second, so a build-verification service can run it anywhere and compare the release assets straight against the committed files. `npm test` runs the assertions above, and CI runs both on every push.
 
 ## Known limitations
 

@@ -273,14 +273,15 @@ Preset คือรายการชั้นทั้งชุดที่บ�
 
 ```bash
 npm ci
-npm run build
+npm run build   # ตรวจไฟล์ที่จะส่งไปกับ release
+npm test        # รันชุดเทสต์
 ```
 
 ไฟล์เทสต์ stub `require("obsidian")` และ `require("@codemirror/*")` เพื่อให้ `main.js` โหลดใน Node ธรรมดาได้ แล้วรัน 321 ข้อความกับ core ครอบคลุมการนับเลข การย้ายทั้งกิ่ง ตำแหน่งเคอร์เซอร์ code fence ตัวนับ heading เทมเพลตเลขและรอบไปกลับ เลขไทย ตั้งค่าจำนวนชั้นและนโยบายความลึก preset และ JSON ของมัน frontmatter รายโน้ต normalize วางแบบฉลาด ข้อความล้วน ผลลัพธ์ HTML และ RTF การย้ายหลายบรรทัด การตัดและวางเป็นกิ่ง เมนูคลิกขวา indent guides และ status bar
 
 นอกจากนั้นยังสร้างหน้าตั้งค่ากับ double ตัวเล็ก ๆ ของ `Setting`, `PluginSettingTab`, `Modal` และ container element เพื่อตรวจแถว ปุ่ม ตัวอย่าง และการตรวจสอบค่า บล็อกแรกของชุดเทสต์ตรวจโครงร่างที่ตัวโหลดของ Obsidian ต้องการ (`module.exports`, `.default`, `prototype.onload`) เพื่อไม่ให้ export ที่เสียหลุดรอดไปได้
 
-ไม่มีขั้นตอนคอมไพล์ `npm run build` แค่รันชุดเทสต์นี้ ซึ่งเป็นวิธีที่ build-verification ยืนยันว่า `main.js` ใน repo ทำได้จริงตามที่ README นี้บอก
+ไม่มีขั้นตอนคอมไพล์ `npm run build` เลยไม่ได้สร้างไฟล์อะไรออกมา แค่ตรวจว่าไฟล์ release ทั้งสามตัวพร้อมส่งตามที่ commit ไว้ คือ `main.js` parse ได้และโหลดเป็นคลาสปลั๊กอินได้ `manifest.json` มีช่องครบและเวอร์ชันตรงกับ `package.json` และมี `styles.css` อยู่จริง ไม่ต้องใช้ dependency และเสร็จในวินาทีเดียว บริการตรวจ build จึงรันได้ทุกที่แล้วเทียบไฟล์ release กับไฟล์ใน repo ได้ตรง ๆ ส่วน `npm test` รันชุดเทสต์ข้างบน และ CI รันทั้งสองอย่างทุกครั้งที่ push
 
 ## ข้อจำกัดที่รู้อยู่
 

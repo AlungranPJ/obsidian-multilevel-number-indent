@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.3.10
+
+For the directory's build check. No change to how the plugin behaves.
+
+- **`npm run build` is a real build check now.** It used to run the test suite, and the directory's build verification reported *Build verification failed while running the build script*. There is no bundler here, so the build does not generate anything: `scripts/build.js` checks that the three release files are ready to ship as committed. `main.js` parses and loads as a plugin class with the host modules stubbed, `manifest.json` has every required field and agrees with `package.json` on the version, and `styles.css` is present. It uses no dependencies and fails loudly on a broken file, so the release assets can be compared straight against the committed ones.
+- **`npm test` runs the assertions**, and CI runs both steps on every push.
+
 ## 3.3.9
 
 Short, plain names in the right-click menu, in the words Word uses where Word has a word for it: **Reset numbering**, **Restart numbering**, **Continue numbering**. Two categories got shorter too: **Moving items** is now **Move**, **Copying out** is now **Copy**.

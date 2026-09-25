@@ -25,6 +25,7 @@ The numbers are **plain text in the file**, not CSS. The level of a line comes f
 |---|---|
 | `main.js` | The whole plugin, hand-written CommonJS, no build step. Pure `CORE` block first, then the `Plugin` class, the settings tab and the CodeMirror pieces. |
 | `styles.css` | Guide rule, menu labels, settings preview, hides Obsidian's per-step indent guides on numbered lines. |
+| `scripts/build.js` | `npm run build`: no bundler, so it only checks the release files (main.js parses and loads as a plugin class, manifest fields, versions agree, styles.css present). No dependencies. |
 | `test/core.test.js` | Stubs `obsidian` and `@codemirror/*`, loads `main.js` in plain Node, runs assertions (`node test/core.test.js`). Also builds the settings tab, the editor menu and `runAction` against doubles. |
 | `assets/context-menu.png` | Screenshot of the right-click menu used in both READMEs. |
 | `scratch/` | Release notes drafts. Git-ignored. |

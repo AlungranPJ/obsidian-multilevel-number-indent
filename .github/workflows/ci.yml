@@ -1,6 +1,7 @@
 name: CI
 
-# The suite is the whole build: main.js is hand-written CommonJS with no bundler
+# main.js is hand-written CommonJS with no bundler, so `npm run build` only checks
+# the shipped files are ready; `npm test` runs the assertions. main.js has no bundler
 # and no runtime dependencies, and test/core.test.js stubs the host modules so it
 # loads in plain Node. A green run means the committed main.js behaves as the
 # README documents.
@@ -27,5 +28,7 @@ jobs:
         run: npm ci
       - name: Check the entry file parses
         run: node --check main.js
-      - name: Run the assertions
+      - name: Build (check the shipped files)
         run: npm run build
+      - name: Run the assertions
+        run: npm test

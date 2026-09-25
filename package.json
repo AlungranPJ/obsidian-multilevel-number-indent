@@ -1,12 +1,12 @@
 {
 	"name": "nested-outline-numbering",
-	"version": "3.3.9",
+	"version": "3.3.10",
 	"description": "Hierarchical plain-text numbering for outlines and notes, driven by Tab, Shift-Tab, Enter and Alt-Arrow, in any number format you set.",
 	"private": true,
 	"license": "MIT",
 	"scripts": {
 		"test": "node test/core.test.js",
-		"build": "node test/core.test.js"
+		"build": "node scripts/build.js"
 	},
 	"keywords": [
 		"obsidian",

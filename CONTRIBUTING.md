@@ -15,9 +15,10 @@ Everything the core needs from the editor arrives as an argument. Keep it that w
 ```bash
 npm ci
 npm run build
+npm test
 ```
 
-There is no bundler and no build step. `npm run build` runs `test/core.test.js`, which stubs `require("obsidian")` and the two CodeMirror modules so that `main.js` loads in plain Node, then runs the whole assertion set.
+There is no bundler. `npm run build` (`scripts/build.js`) only checks that `main.js`, `manifest.json` and `styles.css` are ready to ship as committed. `npm test` runs `test/core.test.js`, which stubs `require("obsidian")` and the two CodeMirror modules so that `main.js` loads in plain Node, then runs the whole assertion set.
 
 Add assertions for behaviour you change. A keystroke handler cannot be checked by hand without driving the GUI, so the test file is the only place a regression gets caught before a user finds it.
 
