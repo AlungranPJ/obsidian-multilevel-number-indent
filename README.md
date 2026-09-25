@@ -48,14 +48,14 @@ Press <kbd>Tab</kbd> and the item steps one level deeper, subtree and all. The n
 <summary><strong>What's new in 3.3.0</strong>: one quiet rule per line, and a menu that scans</summary>
 
 - **One rule per item, on its number.** The margin used to show a rule at every indent step, a fan of lines next to a deep item. Now an item with sub-items draws exactly one faint rule, measured from the editor so it sits under the last digit of its own number (`5.1.1.` hangs on the final `1`) and runs down to its last sub-item. Obsidian's own per-step guides step aside on numbered lines while this is on. Switch it off in the settings tab whenever you like.
-- **The right-click menu is sorted into categories** under **Multilevel list section**: **Numbering**, **Moving items**, **Copying out** and **Headings**. Fifteen items in one column became four short lists.
+- **The right-click menu is sorted into categories** under **Multilevel list section**: **Numbering**, **Move**, **Copy** and **Headings**. Fifteen items in one column became four short lists.
 </details>
 
 <details>
 <summary><strong>What's new in 3.2.0</strong>: the clear-format move, and the pasting rules written down</summary>
 
-- **`Clear list markers and keep the indent`** is the clear-format move: numbers and bullets come off the front of the lines, numbers come off the headings, and the indentation is left exactly as it was, so you can lay the text out again by hand. Any numbering style goes, `1.1 text` included. Blockquotes are content and stay put.
-- **Smart placement, written down.** A pasted number carries its own depth in its segments: `1.1 text` lands at level 2 and `1.1.1 text` at level 3, whatever the indent in front of it says. That is what `Turn the selection into a numbered outline` does, and it is spelled out under [Smart placement](#smart-placement).
+- **`Clear formatting`** is the clear-format move: numbers and bullets come off the front of the lines, numbers come off the headings, and the indentation is left exactly as it was, so you can lay the text out again by hand. Any numbering style goes, `1.1 text` included. Blockquotes are content and stay put.
+- **Smart placement, written down.** A pasted number carries its own depth in its segments: `1.1 text` lands at level 2 and `1.1.1 text` at level 3, whatever the indent in front of it says. That is what `Convert to numbered list` does, and it is spelled out under [Smart placement](#smart-placement).
 - **A picture of the right-click menu**, with the **Multilevel list section** group open, so the menu is easy to find the first time.
 </details>
 
@@ -63,7 +63,7 @@ Press <kbd>Tab</kbd> and the item steps one level deeper, subtree and all. The n
 <summary><strong>What's new in 3.1.0</strong>: the right-click menu, and a list that can run on across a heading</summary>
 
 - **One labelled group in the right-click menu.** Every command sits under **Multilevel list section**, so they read as this plugin's instead of being scattered through the editor menu.
-- **Restart or continue the numbering at a heading**, the way Word does it. Right-click the heading and pick **Continue numbering past this heading** to keep the count running on, or **Restart numbering at this heading** to start again at `1.`. The choice is an HTML comment on the heading line, so it never shows in reading view or in an exported copy.
+- **Restart or continue the numbering at a heading**, the way Word does it. Right-click the heading and pick **Continue numbering** to keep the count running on, or **Restart numbering** to start again at `1.`. The choice is an HTML comment on the heading line, so it never shows in reading view or in an exported copy.
 - **Pasted numbers without a closing mark** (`1.1 text`, `1.1.1 text`) are taken off whole now, and the number itself says how deep the item sits, so a ragged indent cannot push an item down a level.
 - **No more stray rules around a deep item.** A four-space indent makes the host read the line as an indented code block, and that block's tint and its top and bottom rules were the odd lines people were seeing in the editor.
 </details>
@@ -75,12 +75,12 @@ Press <kbd>Tab</kbd> and the item steps one level deeper, subtree and all. The n
 - **Presets**, so nobody has to build `1.1(a)` by hand. Six come with the plugin, you can save your own, and the set travels between machines as JSON.
 - **Thai number styles**: `ก` for `ก` `ข` `ค`, `๑` for `๑` `๒` `๓`. `ข้อ ๑.` is written the same way `1.1(a)` is.
 - **Per-note formats** in the frontmatter, so a legal note and a workshop note can live in one vault in different shapes.
-- **`Normalize the outline`** puts a drifted note back: whole-unit indents, the space back after `1.text`, trailing whitespace gone, every number recomputed.
+- **`Tidy up list`** puts a drifted note back: whole-unit indents, the space back after `1.text`, trailing whitespace gone, every number recomputed.
 - **Smart paste** turns foreign bullets and numbers into this numbering. Opt-in, and it only fires when the clipboard really looks like a list.
 - **Clean text on the way out**: links become their display text, callouts keep their titles and lose their markers, comments and emphasis go.
 - **Rich text on the way out**: HTML and RTF with the numbering kept, or as a real nested list so Word and mail clients number it themselves.
 - **Multi-line selections move as one group**, subtrees included.
-- **Cut and paste as a subtree**, and **Move the item to a level**, for the moves that are about structure rather than one keystroke.
+- **Cut and paste as a subtree**, and **Change list level**, for the moves that are about structure rather than one keystroke.
 - **Indent guides** and a **status bar** that names the level and the number under the cursor.
 
 Also fixed: blank lines between two siblings no longer disappear when <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> swaps them, and body text written deeper than an item no longer restarts the count. [Full changelog](CHANGELOG.md)
@@ -112,49 +112,49 @@ A rule of thumb before the details: **select first, then right-click.** Most com
 
 | Menu item | Use it when | What happens |
 |---|---|---|
-| **Renumber multilevel block** | The numbers went out of step after hand edits: `1.5.` under `1.`, two items both called `3.` | Every number in the block is counted again from the real indentation. The words are not touched. The cursor can sit anywhere in the list. |
-| **Insert multilevel numbering** | You wrote plain lines and indented them with <kbd>Tab</kbd>, and now you want numbers | Select the lines. Each one gets the number its indent calls for: `Goals` / `→ speed` becomes `1. Goals` / `→ 1.1. speed`. For bullets or someone else's numbers use **Turn the selection into a numbered outline** instead, it strips the old marker first. |
-| **Remove multilevel numbering** | You want this plugin's numbers gone and nothing else changed | The `1.` / `1.1.` / `1)` come off. Bullets, headings and indentation stay exactly as they are. |
-| **Clear list markers and keep the indent** | You want a clean slate: every kind of marker gone | Numbers of any style, bullets (`-` `*` `•`), and heading numbers all come off. The indentation stays, so the shape of the list survives and you can number it again in one click. |
-| **Normalize the outline** | A list looks ragged: three spaces here, five there, `1.text` with no space | Indents snap to whole levels, the space after the number comes back, trailing spaces go, and everything is renumbered. |
-| **Turn the selection into a numbered outline** | You pasted a list from Word, a web page or a chat | Select the pasted lines. Old bullets and numbers are replaced with this plugin's numbering, and a dotted number decides its own level: `1.1 Scope` lands at level 2, `1.1.1 In scope` at level 3, whatever the indent says. See [Smart placement](#smart-placement). |
+| **Reset numbering** | The numbers went out of step after hand edits: `1.5.` under `1.`, two items both called `3.` | Every number in the block is counted again from the real indentation. The words are not touched. The cursor can sit anywhere in the list. |
+| **Add numbering** | You wrote plain lines and indented them with <kbd>Tab</kbd>, and now you want numbers | Select the lines. Each one gets the number its indent calls for: `Goals` / `→ speed` becomes `1. Goals` / `→ 1.1. speed`. For bullets or someone else's numbers use **Convert to numbered list** instead, it strips the old marker first. |
+| **Remove numbering** | You want this plugin's numbers gone and nothing else changed | The `1.` / `1.1.` / `1)` come off. Bullets, headings and indentation stay exactly as they are. |
+| **Clear formatting** | You want a clean slate: every kind of marker gone | Numbers of any style, bullets (`-` `*` `•`), and heading numbers all come off. The indentation stays, so the shape of the list survives and you can number it again in one click. |
+| **Tidy up list** | A list looks ragged: three spaces here, five there, `1.text` with no space | Indents snap to whole levels, the space after the number comes back, trailing spaces go, and everything is renumbered. |
+| **Convert to numbered list** | You pasted a list from Word, a web page or a chat | Select the pasted lines. Old bullets and numbers are replaced with this plugin's numbering, and a dotted number decides its own level: `1.1 Scope` lands at level 2, `1.1.1 In scope` at level 3, whatever the indent says. See [Smart placement](#smart-placement). |
 
-### Moving items
+### Move
 
 | Menu item | Use it when | What happens |
 |---|---|---|
-| **Cut the item with its subtree** | An item and everything under it belongs somewhere far away, too far for <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> | Put the cursor on the item and pick it. The item and all its sub-items leave the note and wait in the plugin's own pocket (your normal clipboard is left alone). The list closes up and renumbers. |
-| **Paste the cut item here** | Right after a cut | Put the cursor on the item you want it to follow. The whole branch lands right after that item, at the same level, and everything renumbers. With nothing cut, it does nothing. |
-| **Move the item to a level** | You know the level you want: "this should be level 2" | A small box asks for a level number. The item and its sub-items jump there in one go, instead of pressing <kbd>Tab</kbd> or <kbd>Shift</kbd>+<kbd>Tab</kbd> several times. |
+| **Cut item** | An item and everything under it belongs somewhere far away, too far for <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> | Put the cursor on the item and pick it. The item and all its sub-items leave the note and wait in the plugin's own pocket (your normal clipboard is left alone). The list closes up and renumbers. |
+| **Paste item** | Right after a cut | Put the cursor on the item you want it to follow. The whole branch lands right after that item, at the same level, and everything renumbers. With nothing cut, it does nothing. |
+| **Change list level** | You know the level you want: "this should be level 2" | A small box asks for a level number. The item and its sub-items jump there in one go, instead of pressing <kbd>Tab</kbd> or <kbd>Shift</kbd>+<kbd>Tab</kbd> several times. |
 
-### Copying out
+### Copy
 
 These four work on the selection, or on the whole note when nothing is selected. None of them changes the note.
 
 | Menu item | Use it when | What happens |
 |---|---|---|
-| **Copy as clean text** | Pasting into a chat, an email, a form: somewhere Markdown would look like noise | The text goes to the clipboard with the numbers kept and the Markdown gone: `[[Note\|shown]]` becomes `shown`, `**bold**` becomes `bold`, `%%comments%%` disappear. |
-| **Save the selection as a clean note** | You want that clean version as a file of its own | The same clean text, saved as a new note named after this one, `(clean)` on the end. |
-| **Copy as formatted text** | Pasting into Word, Google Docs or an email and you want it to look like the note | Rich text with the numbering exactly as you see it, indents included. |
-| **Copy as a real nested list** | The other document should own the numbering, so it can keep renumbering as people edit | A real nested list: Word or the mail app numbers it with its own list style. |
+| **Copy as plain text** | Pasting into a chat, an email, a form: somewhere Markdown would look like noise | The text goes to the clipboard with the numbers kept and the Markdown gone: `[[Note\|shown]]` becomes `shown`, `**bold**` becomes `bold`, `%%comments%%` disappear. |
+| **Save as plain text note** | You want that clean version as a file of its own | The same clean text, saved as a new note named after this one, `(clean)` on the end. |
+| **Copy with formatting** | Pasting into Word, Google Docs or an email and you want it to look like the note | Rich text with the numbering exactly as you see it, indents included. |
+| **Copy as nested list** | The other document should own the numbering, so it can keep renumbering as people edit | A real nested list: Word or the mail app numbers it with its own list style. |
 
 ### Headings
 
 | Menu item | Use it when | What happens |
 |---|---|---|
-| **Number headings in note** | You want a numbered document structure | Every heading in the note gets a number: `# 1 Intro`, `## 1.1 Scope`, `# 2 Method`. From then on, changing a heading level with <kbd>Tab</kbd> renumbers them automatically. |
+| **Number headings** | You want a numbered document structure | Every heading in the note gets a number: `# 1 Intro`, `## 1.1 Scope`, `# 2 Method`. From then on, changing a heading level with <kbd>Tab</kbd> renumbers them automatically. |
 | **Remove heading numbers** | The report is done, or you changed your mind | The numbers come off every heading, and the automatic renumbering stops. |
-| **Continue numbering past this heading** | A list above a heading should keep counting below it (`4.` `5.`) instead of starting again at `1.` | Only shows when you right-click a heading. A tiny invisible mark goes on the heading line. It never shows in reading view or in a clean copy. |
-| **Restart numbering at this heading** | You want the normal fresh `1.` back under that heading | Only shows on a heading. It takes that mark away again. |
+| **Continue numbering** | A list above a heading should keep counting below it (`4.` `5.`) instead of starting again at `1.` | Only shows when you right-click a heading. A tiny invisible mark goes on the heading line. It never shows in reading view or in a clean copy. |
+| **Restart numbering** | You want the normal fresh `1.` back under that heading | Only shows on a heading. It takes that mark away again. |
 
 ### Pasting a list that already has numbers
 
 Two ways, pick whichever suits you:
 
 - **Automatic.** Switch on **Format pasted lists** in the settings tab. From then on <kbd>Ctrl</kbd>+<kbd>V</kbd> of anything that looks like a list (at least two numbered or bulleted lines, or lines at different indents) is laid out as this plugin's numbering straight away. Plain paragraphs are pasted as they are. The switch ships off, so turn it on the first time.
-- **By hand.** Paste as usual, select the pasted lines, right-click, **Multilevel list section**, **Turn the selection into a numbered outline**.
+- **By hand.** Paste as usual, select the pasted lines, right-click, **Multilevel list section**, **Convert to numbered list**.
 
-Either way you do **not** need to clear the old numbers first. The old markers are replaced for you, and a dotted number such as `1.1` or `1.1.1` even tells the plugin which level it belongs on. Reach for **Clear list markers and keep the indent** first only when you want to throw the old structure away and arrange the lines yourself.
+Either way you do **not** need to clear the old numbers first. The old markers are replaced for you, and a dotted number such as `1.1` or `1.1.1` even tells the plugin which level it belongs on. Reach for **Clear formatting** first only when you want to throw the old structure away and arrange the lines yourself.
 
 One thing the plugin cannot guess: a line with no dotted number is placed by its indent. So `a) speed` sitting flush under `1) Goals` with no indent comes out as a sibling, not a child. Select those lines and press <kbd>Tab</kbd> once, and they step in together.
 
@@ -257,12 +257,12 @@ The numbering is only half the job. What matters is the text that comes out.
 
 | Command | What it does |
 |---|---|
-| `Normalize the outline` | Puts a drifted note back into shape and renumbers it from the real depth |
-| `Turn the selection into a numbered outline` | Takes a pasted list apart and rebuilds it in this numbering, foreign bullets and foreign numbers included |
-| `Copy as clean text` | The selection as prose: links become their display text, callout markers and comments and emphasis go |
-| `Save the selection as a clean note` | The same cleaned text, written to a new note |
-| `Copy as formatted text` | HTML and RTF with the numbering kept exactly as it reads in the note |
-| `Copy as a real nested list` | HTML and RTF as a real nested list, so Word and mail clients number it themselves |
+| `Tidy up list` | Puts a drifted note back into shape and renumbers it from the real depth |
+| `Convert to numbered list` | Takes a pasted list apart and rebuilds it in this numbering, foreign bullets and foreign numbers included |
+| `Copy as plain text` | The selection as prose: links become their display text, callout markers and comments and emphasis go |
+| `Save as plain text note` | The same cleaned text, written to a new note |
+| `Copy with formatting` | HTML and RTF with the numbering kept exactly as it reads in the note |
+| `Copy as nested list` | HTML and RTF as a real nested list, so Word and mail clients number it themselves |
 
 **Format pasted lists** in the settings tab does that first conversion automatically on <kbd>Ctrl</kbd>+<kbd>V</kbd>. It ships switched off, and it only fires on text that really looks like a list.
 
@@ -270,7 +270,7 @@ The numbering is only half the job. What matters is the text that comes out.
 
 When a list comes in from Word, a web page or a chat, the numbers usually know more than the indents do. So the number says how deep the item goes: `1.1 text` is level 2 and `1.1.1 text` is level 3, whatever indentation sits in front of it. Only a dotted number gets that say (`1.1`, `1.1.1`, `1.1.1)`); a line that merely starts with `1` is prose and is placed by its indent like everything else. A drifted indent therefore cannot push an item down a level, and a ragged outline comes out level.
 
-It is the same move through either door: `Turn the selection into a numbered outline` on a selection, or <kbd>Ctrl</kbd>+<kbd>V</kbd> with **Format pasted lists** switched on. Right-click the text and it is in the menu too, under **Multilevel list section**. That is the whole thing: select the lines, right-click, pick the command, and the list lays itself out.
+It is the same move through either door: `Convert to numbered list` on a selection, or <kbd>Ctrl</kbd>+<kbd>V</kbd> with **Format pasted lists** switched on. Right-click the text and it is in the menu too, under **Multilevel list section**. That is the whole thing: select the lines, right-click, pick the command, and the list lays itself out.
 
 The smallest indent step in the text decides what one level is worth, so a three-space or a tab outline still comes out one level per step. And the numbers are counted, never copied: `1.2.4` written under `1.2.1` comes out `1.2.2`, because the count always follows the real depth.
 
@@ -278,31 +278,31 @@ The smallest indent step in the text decides what one level is worth, so a three
 
 Headings use the same templates with the closing period dropped: `# 1 Introduction`, `## 1.1 Scope`, `### 1.1.1 Detail`. From level 4 they follow the plain-text rule and end with a bracket: `#### 1) Point`, `##### 1.1) Detail`.
 
-Changing a heading level or moving a section renumbers the note automatically, but only **once the note is in numbered mode**, that is, once at least one heading carries a number. A note with no numbers is left alone, so <kbd>Tab</kbd> never starts numbering a document by surprise. `Number headings in note` turns the mode on, `Remove heading numbers` turns it off.
+Changing a heading level or moving a section renumbers the note automatically, but only **once the note is in numbered mode**, that is, once at least one heading carries a number. A note with no numbers is left alone, so <kbd>Tab</kbd> never starts numbering a document by surprise. `Number headings` turns the mode on, `Remove heading numbers` turns it off.
 
-A heading normally starts a fresh list: the items under it count from `1.` again. When you want the count to run on instead, the way Word lets a list continue across a heading, right-click the heading and pick **Continue numbering past this heading**. **Restart numbering at this heading** puts it back. The choice rides on the heading line as an HTML comment, so reading view and `Copy as clean text` never show it.
+A heading normally starts a fresh list: the items under it count from `1.` again. When you want the count to run on instead, the way Word lets a list continue across a heading, right-click the heading and pick **Continue numbering**. **Restart numbering** puts it back. The choice rides on the heading line as an HTML comment, so reading view and `Copy as plain text` never show it.
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `Number headings in note` | Write `1` / `1.1` / `1.1.1` into every heading |
+| `Number headings` | Write `1` / `1.1` / `1.1.1` into every heading |
 | `Remove heading numbers` | Strip the numbers from every heading |
-| `Renumber multilevel block` | Recompute the plain-text numbers from the real indentation |
-| `Insert multilevel numbering` | Turn a space-indented outline into a numbered one |
-| `Remove multilevel numbering` | Strip the plain-text numbers, keeping the indentation |
-| `Clear list markers and keep the indent` | The clear-format move: numbers and bullets of any style off the lines, numbers off the headings too, the indentation left exactly as it was |
-| `Normalize the outline` | Put a drifted outline back into shape and renumber it |
-| `Turn the selection into a numbered outline` | Convert pasted bullets and foreign numbers |
-| `Cut the item with its subtree` | Take an item and everything under it out, ready to place |
-| `Paste the cut item here` | Put it back after the current item, at that item's level |
-| `Move the item to a level` | Ask for a level and move the item and its subtree there |
-| `Continue numbering past this heading` | Let the list run on across the heading instead of starting again at `1.` |
-| `Restart numbering at this heading` | Start a fresh count at `1.` under this heading |
-| `Copy as clean text` | The selection as prose, without any Markdown markers |
-| `Save the selection as a clean note` | The same, written to a new note |
-| `Copy as formatted text` | Rich text with the numbering kept |
-| `Copy as a real nested list` | Rich text as a nested list the target numbers itself |
+| `Reset numbering` | Recompute the plain-text numbers from the real indentation |
+| `Add numbering` | Turn a space-indented outline into a numbered one |
+| `Remove numbering` | Strip the plain-text numbers, keeping the indentation |
+| `Clear formatting` | The clear-format move: numbers and bullets of any style off the lines, numbers off the headings too, the indentation left exactly as it was |
+| `Tidy up list` | Put a drifted outline back into shape and renumber it |
+| `Convert to numbered list` | Convert pasted bullets and foreign numbers |
+| `Cut item` | Take an item and everything under it out, ready to place |
+| `Paste item` | Put it back after the current item, at that item's level |
+| `Change list level` | Ask for a level and move the item and its subtree there |
+| `Continue numbering` | Let the list run on across the heading instead of starting again at `1.` |
+| `Restart numbering` | Start a fresh count at `1.` under this heading |
+| `Copy as plain text` | The selection as prose, without any Markdown markers |
+| `Save as plain text note` | The same, written to a new note |
+| `Copy with formatting` | Rich text with the numbering kept |
+| `Copy as nested list` | Rich text as a nested list the target numbers itself |
 
 Each command is one editor transaction, so a single <kbd>Ctrl</kbd>+<kbd>Z</kbd> puts everything back.
 
@@ -312,8 +312,8 @@ Every command is also in the right-click menu, and the [right-click menu](#the-r
 
 No network calls, no telemetry, and nothing loaded at runtime beyond what the host already provides. Two things are worth spelling out anyway.
 
-- **The clipboard, and only when you ask for it.** `Copy as clean text`, `Copy as formatted text` and `Copy as a real nested list` write to it. `Format pasted lists` reads what you just pasted, through the paste event itself. Nothing is read or written in the background.
-- **Your notes, through the normal vault API.** Every command is one editor transaction, so one <kbd>Ctrl</kbd>+<kbd>Z</kbd> puts everything back. No file is touched outside the note you are in, except `Save the selection as a clean note`, which creates one new note that you named.
+- **The clipboard, and only when you ask for it.** `Copy as plain text`, `Copy with formatting` and `Copy as nested list` write to it. `Format pasted lists` reads what you just pasted, through the paste event itself. Nothing is read or written in the background.
+- **Your notes, through the normal vault API.** Every command is one editor transaction, so one <kbd>Ctrl</kbd>+<kbd>Z</kbd> puts everything back. No file is touched outside the note you are in, except `Save as plain text note`, which creates one new note that you named.
 
 ## Installation
 

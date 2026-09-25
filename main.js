@@ -1783,27 +1783,27 @@ class MultilevelNumberIndent extends Plugin {
 
 		this.addCommand({
 			id: "renumber-block",
-			name: "Renumber multilevel block",
+			name: "Reset numbering",
 			editorCallback: (editor) => this.runRange(editor, renumberRange, "renumber"),
 		});
 		this.addCommand({
 			id: "insert-numbering",
-			name: "Insert multilevel numbering",
+			name: "Add numbering",
 			editorCallback: (editor) => this.runRange(editor, insertNumbering, "insert"),
 		});
 		this.addCommand({
 			id: "remove-numbering",
-			name: "Remove multilevel numbering",
+			name: "Remove numbering",
 			editorCallback: (editor) => this.runRange(editor, removeNumbering, "remove"),
 		});
 		this.addCommand({
 			id: "clear-format",
-			name: "Clear list markers and keep the indent",
+			name: "Clear formatting",
 			editorCallback: (editor) => this.runRange(editor, clearFormatting, "clear"),
 		});
 		this.addCommand({
 			id: "number-headings",
-			name: "Number headings in note",
+			name: "Number headings",
 			editorCallback: (editor) => this.runWholeNote(editor, numberHeadings),
 		});
 		this.addCommand({
@@ -1813,12 +1813,12 @@ class MultilevelNumberIndent extends Plugin {
 		});
 		this.addCommand({
 			id: "continue-heading-numbering",
-			name: "Continue numbering past this heading",
+			name: "Continue numbering",
 			editorCheckCallback: (checking, editor) => this.runHeadingContinuation(editor, checking, true),
 		});
 		this.addCommand({
 			id: "restart-heading-numbering",
-			name: "Restart numbering at this heading",
+			name: "Restart numbering",
 			editorCheckCallback: (checking, editor) => this.runHeadingContinuation(editor, checking, false),
 		});
 
@@ -1914,8 +1914,8 @@ class MultilevelNumberIndent extends Plugin {
 				title: "Numbering",
 				ids: ["renumber-block", "insert-numbering", "remove-numbering", "clear-format", "normalize-outline", "ingest-outline"],
 			},
-			{ title: "Moving items", ids: ["cut-item", "paste-item", "move-item-to-level"] },
-			{ title: "Copying out", ids: ["copy-clean-text", "save-clean-note", "copy-formatted", "copy-list"] },
+			{ title: "Move", ids: ["cut-item", "paste-item", "move-item-to-level"] },
+			{ title: "Copy", ids: ["copy-clean-text", "save-clean-note", "copy-formatted", "copy-list"] },
 			{
 				title: "Headings",
 				ids: ["number-headings", "remove-heading-numbers", "continue-heading-numbering", "restart-heading-numbering"],
@@ -2114,7 +2114,7 @@ class MultilevelNumberIndent extends Plugin {
 	addFormatCommands() {
 		this.addCommand({
 			id: "normalize-outline",
-			name: "Normalize the outline",
+			name: "Tidy up list",
 			editorCallback: (editor) => {
 				const text = editor.getValue();
 				const lines = text.split("\n");
@@ -2124,7 +2124,7 @@ class MultilevelNumberIndent extends Plugin {
 		});
 		this.addCommand({
 			id: "ingest-outline",
-			name: "Turn the selection into a numbered outline",
+			name: "Convert to numbered list",
 			editorCallback: (editor) => {
 				const selected = editor.getSelection();
 				if (!selected) return;
@@ -2133,14 +2133,14 @@ class MultilevelNumberIndent extends Plugin {
 		});
 		this.addCommand({
 			id: "copy-clean-text",
-			name: "Copy as clean text",
+			name: "Copy as plain text",
 			editorCallback: (editor) => {
 				this.app.clipboard.write(cleanForExport(editor.getSelection() || editor.getValue()));
 			},
 		});
 		this.addCommand({
 			id: "save-clean-note",
-			name: "Save the selection as a clean note",
+			name: "Save as plain text note",
 			editorCallback: (editor) => {
 				const selected = editor.getSelection() || editor.getValue();
 				const file = this.app.workspace.getActiveFile();
@@ -2150,21 +2150,21 @@ class MultilevelNumberIndent extends Plugin {
 		});
 		this.addCommand({
 			id: "copy-formatted",
-			name: "Copy as formatted text",
+			name: "Copy with formatting",
 			editorCallback: (editor) => {
 				this.writeRich((editor.getSelection() || editor.getValue()).split("\n"), "keep-numbers");
 			},
 		});
 		this.addCommand({
 			id: "copy-list",
-			name: "Copy as a real nested list",
+			name: "Copy as nested list",
 			editorCallback: (editor) => {
 				this.writeRich((editor.getSelection() || editor.getValue()).split("\n"), "list");
 			},
 		});
 		this.addCommand({
 			id: "cut-item",
-			name: "Cut the item with its subtree",
+			name: "Cut item",
 			editorCallback: (editor) => {
 				const text = editor.getValue();
 				const cut = cutItem(text.split("\n"), editor.getCursor().line);
@@ -2175,7 +2175,7 @@ class MultilevelNumberIndent extends Plugin {
 		});
 		this.addCommand({
 			id: "paste-item",
-			name: "Paste the cut item here",
+			name: "Paste item",
 			editorCheckCallback: (checking, editor) => {
 				if (checking) return Boolean(this.cutBuffer);
 				if (!this.cutBuffer) return;
@@ -2188,7 +2188,7 @@ class MultilevelNumberIndent extends Plugin {
 		});
 		this.addCommand({
 			id: "move-item-to-level",
-			name: "Move the item to a level",
+			name: "Change list level",
 			editorCheckCallback: (checking, editor) => {
 				if (checking) return true;
 				new LevelModal(this, (depth) => {

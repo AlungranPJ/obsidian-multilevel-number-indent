@@ -120,7 +120,7 @@ PY
 
 ## คำสั่งใน Command Palette
 
-`Number headings in note`, `Remove heading numbers`, `Renumber multilevel block`, `Insert multilevel numbering`, `Remove multilevel numbering`, `Normalize the outline`, `Turn the selection into a numbered outline`, `Cut the item with its subtree`, `Paste the cut item here`, `Move the item to a level`, `Copy as clean text`, `Save the selection as a clean note`, `Copy as formatted text`, `Copy as a real nested list`, `Continue numbering past this heading`, `Restart numbering at this heading`, `Clear list markers and keep the indent`
+`Number headings`, `Remove heading numbers`, `Reset numbering`, `Add numbering`, `Remove numbering`, `Tidy up list`, `Convert to numbered list`, `Cut item`, `Paste item`, `Change list level`, `Copy as plain text`, `Save as plain text note`, `Copy with formatting`, `Copy as nested list`, `Continue numbering`, `Restart numbering`, `Clear formatting`
 
 รายละเอียดของแต่ละคำสั่งอยู่ที่ [README.th.md](README.th.md)
 
@@ -131,7 +131,7 @@ PY
 | ไม่เห็น plugin ใน Settings | ยังไม่ reload | ปิดเปิด Obsidian ใหม่ |
 | เพิ่มในไฟล์แล้วหาย | Obsidian เปิดอยู่ตอนแก้ | ปิด Obsidian ก่อนแก้ไฟล์ |
 | กด Tab บนบรรทัดเลขแล้วไม่ย่อ | เป็นรายการแรกของระดับนั้น ไม่มีพี่น้องให้ไปเป็นลูก | ถูกต้องตามดีไซน์ ให้ย่อรายการที่ 2 เป็นต้นไป |
-| กด Tab บน heading แล้วไม่เปลี่ยน level | โน้ตยังไม่มีเลข heading | รันคำสั่ง `Number headings in note` ครั้งหนึ่งก่อน |
+| กด Tab บน heading แล้วไม่เปลี่ยน level | โน้ตยังไม่มีเลข heading | รันคำสั่ง `Number headings` ครั้งหนึ่งก่อน |
 | ปุ่มไม่ทำงานเลย | มี plugin อื่นยึดปุ่มเดียวกันที่ capture phase | ปิด plugin นั้น (เช่น Nested Ordered Numbering, Heading Shifter) |
 
 ## ถอนการติดตั้ง

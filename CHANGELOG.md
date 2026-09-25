@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.3.9
+
+Short, plain names in the right-click menu, in the words Word uses where Word has a word for it: **Reset numbering**, **Restart numbering**, **Continue numbering**. Two categories got shorter too: **Moving items** is now **Move**, **Copying out** is now **Copy**.
+
+Only the names changed. The command ids are the same, so any hotkey you set on a command keeps working.
+
+| Before | Now |
+|---|---|
+| Renumber multilevel block | **Reset numbering** |
+| Insert multilevel numbering | **Add numbering** |
+| Remove multilevel numbering | **Remove numbering** |
+| Clear list markers and keep the indent | **Clear formatting** |
+| Normalize the outline | **Tidy up list** |
+| Turn the selection into a numbered outline | **Convert to numbered list** |
+| Cut the item with its subtree | **Cut item** |
+| Paste the cut item here | **Paste item** |
+| Move the item to a level | **Change list level** |
+| Copy as clean text | **Copy as plain text** |
+| Save the selection as a clean note | **Save as plain text note** |
+| Copy as formatted text | **Copy with formatting** |
+| Copy as a real nested list | **Copy as nested list** |
+| Number headings in note | **Number headings** |
+| Continue numbering past this heading | **Continue numbering** |
+| Restart numbering at this heading | **Restart numbering** |
+
 ## 3.3.8
 
 A guide to the right-click menu. No change to how the plugin behaves.

@@ -1041,8 +1041,8 @@ const inside = group.sub.entries;
 check("no item inside the group opens a further submenu", inside.filter((e) => e.sub).length, 0);
 check("the categories are labels, not clickable items", inside.filter((e) => e.label).map((e) => [e.title, e.disabled, e.click]), [
 	["Numbering", true, null],
-	["Moving items", true, null],
-	["Copying out", true, null],
+	["Move", true, null],
+	["Copy", true, null],
 	["Headings", true, null],
 ]);
 check("each category is set off by a separator", inside.filter((e) => e.kind === "separator").length, 3);
