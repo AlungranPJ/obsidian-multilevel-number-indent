@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.3.12
+
+- **The fix from 3.3.11 now holds while you type.** 3.3.11 kept Obsidian's **Smart lists** away from the plugin's own edits, so a new sub-list did start at `1)`. But the moment you typed the first letter, Smart lists had another go and turned it into `4)` or `6)`, carrying on from the list under the previous heading. The plugin now checks each thing you type: if the number on that line changed while the depth and the number part were left alone, it puts back the number it works out for that line. Only the number is touched; the indent and the text stay exactly as typed, and one <kbd>Ctrl</kbd>+<kbd>Z</kbd> still undoes the letter you typed.
+- A number you retype by hand is left alone by the plugin, so Smart lists may still adjust it. **Reset numbering** puts the whole list back in order.
+
 ## 3.3.11
 
 - **A new sub-list starts at `1)` again.** Nest a line under `1.1.2.` after a list under `1.1.1.` that ran to `3)`, and it came out `4)`, as if the old list had carried on. The plugin had it right: the number was rewritten a moment later by Obsidian's own **Smart lists** option, which renumbers a freshly nested line to continue the nearest earlier list at that depth. Every edit the plugin makes now goes into the note with the host's list filters switched off, so the numbers you see are the ones the plugin worked out. That covers Tab, Shift+Tab, Enter, Alt+↑/↓, the right-click commands and pasting a list. Smart lists stays on for everything else you type.

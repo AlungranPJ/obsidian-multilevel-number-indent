@@ -90,3 +90,5 @@ A throwaway note must be detached, waited on, deleted, and the vault folder chec
 ## Writing into the editor
 
 Every edit goes through `writeEdit(editor, change, selection)`: a CodeMirror dispatch with `filter: false`, because Obsidian's **Smart lists** change filter rewrites a freshly nested list number (a new sub-list's `1)` became `4)`). Never call `editor.transaction` or `replaceSelection` directly. A transaction selection is resolved against the document after the change.
+
+Smart lists also rewrites numbers while the user types, which `filter: false` cannot reach. `numberGuard` (a `Prec.highest` transaction filter) pairs each changed line with its old line and calls the pure `guardNumbers`: a line that kept its depth, whose number changed while the caret was in its text, gets the plugin's number back (number only, indent and text untouched). Edits tagged `input.mni`, undo and redo pass through.

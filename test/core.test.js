@@ -959,6 +959,27 @@ console.log("edits skip the host's smart-list filter");
 	check("the fallback paste uses replaceRange", txs[1].range[0], "q");
 }
 
+/* Typing in a new sub-list: Smart lists rewrote `1) f` into `4) f` to carry
+ * on an earlier list. guardNumbers spots a number that changed under typing
+ * and hands back the one the plugin works out. */
+console.log("a number rewritten under typing is put back");
+{
+	const savedConfig = core.getConfig();
+	core.setConfig({ indent: "\t", formats: ["1.", "1.1.", "1.1.1.", "1)", "1.1)", "1.1.1)"] });
+	/* The shape from the report: a list under 1.1.1. runs to 3), then 1.1.2. starts a new one. */
+	const head = ["1. top", "\t1.1. Media", "\t\t1.1.1. use", "\t\t\t1) a", "\t\t\t2) b", "\t\t\t3) c", "\t\t1.1.2. problem"];
+	const before = head.concat(["\t\t\t1) "]);
+	const at = { from: 7, to: 7 };
+	const fixes = core.guardNumbers(before, head.concat(["\t\t\t4) f"]), [at], { line: 7, ch: 6 });
+	check("the rewritten line is fixed", fixes, [{ line: 7, text: "\t\t\t1) f" }]);
+	check("plain typing is left alone", core.guardNumbers(before, head.concat(["\t\t\t1) f"]), [at], { line: 7, ch: 6 }), []);
+	check("a number the user edits by hand is theirs", core.guardNumbers(before, head.concat(["\t\t\t15) "]), [at], { line: 7, ch: 4 }), []);
+	check("a line that changed depth is not second-guessed", core.guardNumbers(before, head.concat(["\t\t\t\t1.1) "]), [at], { line: 7, ch: 0 }), []);
+	check("a line without a number is ignored", core.guardNumbers(["text"], ["text!"], [{ from: 0, to: 0 }], { line: 0, ch: 4 }), []);
+	check("only the number is put back, the indent stays as typed", core.guardNumbers(["1. a", "  2. "], ["1. a", "  7. x"], [{ from: 1, to: 1 }], { line: 1, ch: 5 }), [{ line: 1, text: "  1.1. x" }]);
+	core.setConfig(savedConfig);
+}
+
 console.log("a selection stays on the group through every key");
 function fakeEditor(lines, from, to) {
 	let text = lines.join("\n");

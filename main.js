@@ -26,7 +26,7 @@
  * only way to reach the host modules. There is no bundler and no import syntax. */
 /* eslint-disable @typescript-eslint/no-require-imports -- require() is the only way to reach the host modules in a CommonJS Obsidian plugin */
 const { Plugin, PluginSettingTab, Setting, MarkdownView, Modal, editorInfoField } = require("obsidian");
-const { Prec } = require("@codemirror/state");
+const { Prec, EditorState } = require("@codemirror/state");
 const { keymap, Decoration, ViewPlugin, layer, RectangleMarker } = require("@codemirror/view");
 /* eslint-enable @typescript-eslint/no-require-imports -- the host modules are imported, nothing else below needs the exception */
 
@@ -1607,6 +1607,34 @@ function applyAction(lines, line, ch, action) {
 }
 
 /**
+ * The numbers a host edit should not have touched. `before` and `after` are
+ * the note around one transaction the plugin did not make; `lines` maps each
+ * line the change reached in `after` to the line it came from in `before`,
+ * and `caret` is where the typing happened. When a line kept its depth and
+ * the typing was in its text, not its number, but the number still changed,
+ * something else rewrote it (Obsidian's Smart lists continues the nearest
+ * earlier list at that depth). Those lines get back the number the plugin
+ * works out for them. Returns [{ line, text }] to write, possibly empty.
+ */
+function guardNumbers(before, after, lines, caret) {
+	const fixes = [];
+	for (const pair of lines) {
+		const was = parseLine(before[pair.from] === undefined ? "" : before[pair.from]);
+		const now = parseLine(after[pair.to] === undefined ? "" : after[pair.to]);
+		if (!was || !now) continue;
+		if (was.columns !== now.columns || was.number === now.number) continue;
+		/* The user edited the number itself: leave it to them. */
+		if (caret && caret.line === pair.from && caret.ch < (before[pair.from].length - was.content.length)) continue;
+		const fixed = after.slice();
+		renumberRange(fixed, pair.to, pair.to);
+		const want = parseLine(fixed[pair.to]);
+		/* Only the number is put back; the indent and the text stay exactly as typed. */
+		if (want && want.number !== now.number) fixes.push({ line: pair.to, text: now.indent + want.number + " " + now.content });
+	}
+	return fixes;
+}
+
+/**
  * Writes one edit into the note. The plugin has already worked out every
  * number, so the host's smart-list pass must not touch it: with
  * "Smart lists" on, Obsidian rewrites a freshly nested list line to continue
@@ -1646,6 +1674,42 @@ function writeEdit(editor, change, selection) {
 	const tx = { changes: [change] };
 	if (selection) tx.selection = selection;
 	editor.transaction(tx);
+}
+
+/**
+ * A transaction filter that keeps the plugin's numbers on lines the user is
+ * typing in. Edits the plugin makes itself carry `input.mni` and pass as they
+ * are; so does anything that does not change the text.
+ */
+function numberGuard(tr) {
+	if (!tr.docChanged || tr.isUserEvent("input.mni") || tr.isUserEvent("undo") || tr.isUserEvent("redo")) return tr;
+	const oldDoc = tr.startState.doc;
+	const newDoc = tr.newDoc;
+	const pairs = [];
+	const seen = new Set();
+	tr.changes.iterChangedRanges((fromA, toA, fromB, toB) => {
+		const a0 = oldDoc.lineAt(fromA).number - 1;
+		const b0 = newDoc.lineAt(fromB).number - 1;
+		const b1 = newDoc.lineAt(toB).number - 1;
+		for (let b = b0; b <= b1; b++) {
+			if (seen.has(b)) continue;
+			seen.add(b);
+			pairs.push({ from: Math.min(oldDoc.lines - 1, a0 + (b - b0)), to: b });
+		}
+	});
+	if (pairs.length === 0 || pairs.length > 200) return tr;
+	const head = tr.startState.selection.main.head;
+	const caretLine = oldDoc.lineAt(head);
+	const caret = { line: caretLine.number - 1, ch: head - caretLine.from };
+	const before = oldDoc.toString().split("\n");
+	const after = newDoc.toString().split("\n");
+	const fixes = guardNumbers(before, after, pairs, caret);
+	if (fixes.length === 0) return tr;
+	const changes = fixes.map((f) => {
+		const line = newDoc.line(f.line + 1);
+		return { from: line.from, to: line.to, insert: f.text };
+	});
+	return [tr, { changes, sequential: true }];
 }
 
 /** Smallest single edit that turns `a` into `b`. */
@@ -1704,6 +1768,7 @@ function offsetToPos(text, offset) {
 
 const CORE = {
 	writeEdit,
+	guardNumbers,
 	DEFAULT_SETTINGS,
 	MIN_LEVELS,
 	MAX_LEVELS,
@@ -1815,6 +1880,11 @@ class MultilevelNumberIndent extends Plugin {
 			)
 		);
 
+		/* Highest precedence runs last among transaction filters, so this sees
+		 * what the host's list filters already did to the user's own typing. */
+		if (EditorState && EditorState.transactionFilter) {
+			this.registerEditorExtension(Prec.highest(EditorState.transactionFilter.of((tr) => numberGuard(tr))));
+		}
 		this.registerEditorExtension(numberingLineDecorations);
 		this.registerEditorExtension(guideLayer);
 		this.addFormatCommands();

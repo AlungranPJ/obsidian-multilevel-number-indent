@@ -1,7 +1,7 @@
 {
 	"id": "nested-outline-numbering",
 	"name": "Multilevel Number Indent",
-	"version": "3.3.11",
+	"version": "3.3.12",
 	"minAppVersion": "1.5.0",
 	"description": "Hierarchical plain-text numbering for outlines and notes, driven by Tab, Shift-Tab, Enter and Alt-Arrow, in any number format you set.",
 	"author": "AlungranPJ",
